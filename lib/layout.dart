@@ -1,0 +1,558 @@
+import 'package:chat/controller/call_controller.dart';
+import 'package:chat/controller/chat_controller.dart';
+import 'package:chat/controller/route_controller.dart';
+import 'package:chat/controller/story_controller.dart';
+import 'package:chat/pages/call.dart';
+import 'package:chat/pages/chat.dart';
+import 'package:chat/pages/setting.dart';
+import 'package:chat/pages/story.dart';
+import 'package:chat/services/room_service.dart';
+import 'package:chat/services/user_service.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:iconsax_plus/iconsax_plus.dart';
+
+class Layout extends StatefulWidget {
+  const Layout({super.key, required this.user});
+  final Map<String, dynamic> user;
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _LayoutState createState() => _LayoutState();
+}
+
+Route _goPage(Widget page) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionDuration: const Duration(milliseconds: 300),
+    reverseTransitionDuration: const Duration(milliseconds: 300),
+    opaque: false,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(1.0, 0.0);
+      const end = Offset.zero;
+      final tween = Tween(begin: begin, end: end)
+          .chain(CurveTween(curve: Curves.easeInOutExpo));
+      final offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+  );
+}
+
+class _LayoutState extends State<Layout> {
+  final PageController _pageController = PageController(initialPage: 0);
+  final ChatController chatController = Get.put(ChatController());
+  final StoryController storyController = Get.put(StoryController());
+  final CallController callController = Get.put(CallController());
+  TextEditingController searchController = TextEditingController();
+  List<Widget> page = [];
+  bool loading = false;
+  late UserService _userService;
+  late RoomService _roomService;
+
+  Function deleteFunction = () {};
+  Function cancelFunction = () {};
+  int _currentIndex = 0;
+  int selectedCount = 0;
+  bool selectedAll = false;
+
+  List<String> title = [
+    "Chat",
+    "Story",
+    "Call",
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    routeController.currentRoute.value = "/layout";
+
+    page = [
+      Chat(user: widget.user),
+      Story(user: widget.user),
+      Call(user: widget.user),
+    ];
+    searchController.addListener(_onSearchChanged);
+
+    _userService = UserService(widget.user['username']);
+    _roomService = RoomService(widget.user['id']);
+    _userService.fetchUsers(widget.user['username']);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    searchController.dispose();
+  }
+
+  void _onSearchChanged() async {
+    String searchQuery = searchController.text.toLowerCase();
+
+    if (_currentIndex == 0) {
+      RoomService(widget.user['id']).searchRoom(searchQuery);
+      // chatController.searchData(searchQuery);
+    } else if (_currentIndex == 1) {
+      // storyController.searchData(searchQuery);
+    } else if (_currentIndex == 2) {
+      // callController.searchData(searchQuery);
+    }
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+    _pageController.animateToPage(index,
+        duration: const Duration(milliseconds: 300), curve: Curves.ease);
+  }
+
+  void _onPageChange(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  bool _areAllItemsSelected() {
+    List<String> data;
+    if (_currentIndex == 0) {
+      data = chatController.selectedChat;
+    } else if (_currentIndex == 1) {
+      data = [];
+    } else {
+      data = [];
+    }
+    return false;
+  }
+
+  void deleteChatRooms() async {
+    if (chatController.selectedChat.isNotEmpty) {
+      await _roomService.deleteChatRooms(chatController.selectedChat);
+      chatController.selectedChat.clear();
+      setState(() {
+        chatController.showSelect = false.obs;
+      });
+    }
+  }
+
+  void deleteData() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          clipBehavior: Clip.none,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          titlePadding: const EdgeInsets.only(top: 70, bottom: 10),
+          contentPadding: const EdgeInsets.only(bottom: 12),
+          actionsPadding: const EdgeInsets.all(0),
+          title: Stack(
+            alignment: Alignment.topCenter,
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                top: -110,
+                child: ElevatedButton(
+                  style: const ButtonStyle(
+                    padding: WidgetStatePropertyAll(EdgeInsets.all(25)),
+                    shape: WidgetStatePropertyAll(CircleBorder(
+                      eccentricity: 0,
+                      side: BorderSide(
+                        color: Color(0xFFF6BDBD),
+                        width: 3,
+                      ),
+                    )),
+                    backgroundColor: WidgetStatePropertyAll(Color(0xFFFB4B4B)),
+                  ),
+                  onPressed: () {},
+                  child: const Icon(
+                    IconsaxPlusLinear.trash,
+                    color: Colors.white,
+                    size: 40,
+                  ),
+                ),
+              ),
+              const Text(
+                "Delete",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+                textAlign: TextAlign.center,
+              )
+            ],
+          ),
+          content: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              "Are you sure you want to delete ${_areAllItemsSelected() ? "all" : "this"} ${title[_currentIndex]}?",
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  color: Color(0xFFC8C8C8),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600),
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: const BoxDecoration(
+                  color: Color(0xFFF1F5F8),
+                  borderRadius:
+                      BorderRadius.vertical(bottom: Radius.circular(10))),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: FilledButton(
+                      style: const ButtonStyle(
+                        shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(10)))),
+                        backgroundColor:
+                            WidgetStatePropertyAll(Color(0xFFD0DEEB)),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text(
+                        "Cancel",
+                        style: TextStyle(
+                            color: Color(0xFF9BA9B9),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  Expanded(
+                    child: FilledButton(
+                      style: const ButtonStyle(
+                        shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(10)))),
+                        backgroundColor:
+                            WidgetStatePropertyAll(Color(0xFFFB4B4B)),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        deleteFunction();
+                      },
+                      child: const Text("Yes",
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(120),
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.bottomCenter,
+          children: [
+            Container(
+              color: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 0, left: 0, top: 35),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                          border: Border(
+                              bottom: BorderSide(
+                        color: Color(0xFFf3f4f6),
+                      ))),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            title[_currentIndex],
+                            style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20),
+                          ),
+                          Obx(
+                            () {
+                              bool hasSelected = false;
+                              selectedCount = 0;
+                              bool hasData = false;
+
+                              if (_currentIndex == 0) {
+                                selectedCount =
+                                    chatController.selectedChat.length;
+                                hasSelected = chatController.showSelect.value;
+                                hasData = selectedCount != 0;
+                                deleteFunction = () {
+                                  // chatController.deleteData(
+                                  //   context,
+                                  // );
+                                  deleteChatRooms();
+                                };
+                                cancelFunction = () {
+                                  chatController.selectedChat.clear();
+                                  setState(() {
+                                    chatController.showSelect = false.obs;
+                                  });
+                                  chatController.selectedChat.refresh();
+                                };
+                              } else if (_currentIndex == 1) {
+                                selectedCount = storyController.data
+                                    .where((e) => e['selected'])
+                                    .length;
+                                hasSelected = storyController.showSelect.value;
+                                hasData = storyController.data
+                                    .any((element) => element['selected']);
+                                deleteFunction = () {
+                                  if (storyController.data
+                                      .any((element) => element['selected'])) {
+                                    storyController.deleteData(
+                                      context,
+                                      storyController.data
+                                          .where((e) => e['selected'] == true)
+                                          .map((e) => e['id'])
+                                          .toList(),
+                                    );
+                                  }
+                                };
+
+                                cancelFunction = () {
+                                  for (var e in storyController.data) {
+                                    e['selected'] = false;
+                                  }
+                                  setState(() {
+                                    storyController.showSelect = false.obs;
+                                  });
+
+                                  storyController.data.refresh();
+                                };
+                              } else if (_currentIndex == 2) {
+                                selectedCount = callController.data
+                                    .where((e) => e['selected'])
+                                    .length;
+                                hasSelected = callController.showSelect.value;
+                                hasData = callController.data
+                                    .any((element) => element['selected']);
+                                deleteFunction = () {
+                                  if (callController.data
+                                      .any((element) => element['selected'])) {
+                                    callController.deleteData(
+                                      context,
+                                      callController.data
+                                          .where((e) => e['selected'])
+                                          .map((e) => e['id'])
+                                          .toList(),
+                                    );
+                                  }
+                                };
+
+                                cancelFunction = () {
+                                  for (var e in callController.data) {
+                                    e['selected'] = false;
+                                  }
+                                  setState(() {
+                                    callController.showSelect = false.obs;
+                                  });
+                                  callController.data.refresh();
+                                };
+                              }
+
+                              return hasSelected
+                                  ? Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12),
+                                      child: Wrap(
+                                        direction: Axis.horizontal,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        children: [
+                                          // Text(
+                                          //   "($selectedCount selected)",
+                                          //   style: const TextStyle(
+                                          //       color: Colors.black,
+                                          //       fontSize: 10,
+                                          //       fontWeight: FontWeight.w400),
+                                          // ),
+                                          // const SizedBox(width: 5),
+                                          GestureDetector(
+                                            onTap: () {
+                                              if (hasData) {
+                                                deleteData();
+                                              }
+                                            },
+                                            child: const Icon(
+                                              IconsaxPlusLinear.trash,
+                                              color: Colors.red,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          GestureDetector(
+                                            onTap: () {
+                                              cancelFunction();
+                                            },
+                                            child: const Text(
+                                              "Cancel",
+                                              style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600),
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    )
+                                  : IconButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                            context,
+                                            _goPage(
+                                                Setting(user: widget.user)));
+                                      },
+                                      icon: const Icon(
+                                        IconsaxPlusBold.setting_2,
+                                        color: Colors.blue,
+                                      ),
+                                    );
+                            },
+                          )
+                        ],
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      child: CupertinoTextField(
+                        controller: searchController,
+                        prefix: const Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Icon(
+                            IconsaxPlusLinear.search_normal_1,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        placeholder: "Search ${title[_currentIndex]}",
+                        padding: const EdgeInsets.all(15),
+                        decoration: BoxDecoration(
+                          color: Color(0xFFf9fafb),
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        height: 60,
+        // color: Colors.white,
+        decoration: BoxDecoration(
+            border: Border(
+                top: BorderSide(
+          color: Color(0xFFf3f4f6),
+        ))),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List.generate(3, (index) {
+                return GestureDetector(
+                  onTap: () => _onItemTapped(index),
+                  child: Container(
+                    width: 70,
+                    color: _currentIndex == index
+                        ? Colors.lightBlue.shade50
+                        : Colors.white,
+                    child: Stack(
+                      children: [
+                        if (_currentIndex == index)
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              height: 3,
+                              color: const Color(0xFF2FBEFF),
+                            ),
+                          ),
+                        Center(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                _getIconForIndex(index, _currentIndex),
+                                size: 25,
+                                color: _currentIndex == index
+                                    ? Colors.blue
+                                    : Colors.grey.shade600,
+                              ),
+                              const SizedBox(
+                                height: 3,
+                              ),
+                              Text(
+                                title[index],
+                                style: const TextStyle(
+                                    fontSize: 12, color: Colors.grey),
+                              )
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: _onPageChange,
+        children: page,
+      ),
+    );
+  }
+}
+
+IconData _getIconForIndex(int index, int currentIndex) {
+  switch (index) {
+    case 0:
+      return currentIndex == index
+          ? IconsaxPlusBold.messages_2
+          : IconsaxPlusLinear.messages_2;
+    case 1:
+      return currentIndex == index
+          ? IconsaxPlusBold.story
+          : IconsaxPlusLinear.story;
+    case 2:
+      return currentIndex == index
+          ? IconsaxPlusBold.call
+          : IconsaxPlusLinear.call;
+    default:
+      return Icons.home_outlined;
+  }
+}

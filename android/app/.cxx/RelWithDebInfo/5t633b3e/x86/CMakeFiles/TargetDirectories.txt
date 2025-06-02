@@ -1,0 +1,2 @@
+C:/Users/ahmad/Documents/chat/android/app/.cxx/RelWithDebInfo/5t633b3e/x86/CMakeFiles/edit_cache.dir
+C:/Users/ahmad/Documents/chat/android/app/.cxx/RelWithDebInfo/5t633b3e/x86/CMakeFiles/rebuild_cache.dir

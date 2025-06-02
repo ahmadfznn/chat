@@ -1,0 +1,296 @@
+import 'package:chat/controller/chat_controller.dart';
+import 'package:chat/models/user_model.dart';
+import 'package:chat/pages/detail_chat.dart';
+import 'package:chat/pages/user_profile.dart';
+import 'package:chat/services/room_service.dart';
+import 'package:chat/services/user_service.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:iconsax_plus/iconsax_plus.dart';
+
+class Friend extends StatefulWidget {
+  const Friend({super.key, required this.user});
+  final Map<String, dynamic> user;
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _FriendState createState() => _FriendState();
+}
+
+Route _goPage(Widget page) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionDuration: const Duration(milliseconds: 300),
+    reverseTransitionDuration: const Duration(milliseconds: 300),
+    opaque: false,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(0.0, 1.0);
+      const end = Offset.zero;
+      final tween = Tween(begin: begin, end: end)
+          .chain(CurveTween(curve: Curves.easeInOutExpo));
+      final offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+  );
+}
+
+class _FriendState extends State<Friend> {
+  ChatController chatController = ChatController();
+  TextEditingController searchController = TextEditingController();
+  late UserService _userService;
+  late RoomService _roomService;
+
+  @override
+  void initState() {
+    super.initState();
+    _roomService = RoomService(widget.user['id']);
+    _userService = UserService(widget.user['username']);
+    _userService.fetchUsers(widget.user['username']);
+  }
+
+  @override
+  void dispose() {
+    _roomService.dispose();
+    _userService.dispose();
+    super.dispose();
+  }
+
+  Future<void> changeFriendship(String userId) async {
+    await _userService.toggleFriendship(widget.user, userId);
+  }
+
+  Future<void> _refreshUser() async {
+    _userService.fetchUsers(widget.user['username']);
+  }
+
+  Future<void> openRoom(String id) async {
+    Map<String, dynamic> res =
+        await _roomService.openRoom(widget.user['id'], id);
+    if (res['status']) {
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
+      await Navigator.push(
+        // ignore: use_build_context_synchronously
+        context,
+        _goPage(DetailChat(data: res['data'], user: widget.user)),
+      );
+    }
+  }
+
+  void _navigateToUserProfile(BuildContext context, UserModel user) async {
+    await Navigator.push(
+      // ignore: use_build_context_synchronously
+      context,
+      _goPage(
+        UserProfile(
+          data: user,
+          user: widget.user,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(120),
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.bottomCenter,
+          children: [
+            Container(
+                color: Colors.white,
+                child: Padding(
+                    padding: const EdgeInsets.only(right: 0, left: 0, top: 35),
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          decoration: BoxDecoration(
+                              border: Border(
+                                  bottom: BorderSide(
+                            color: Color(0xFFf3f4f6),
+                          ))),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                icon: const Icon(
+                                  Icons.chevron_left,
+                                  color: Colors.blue,
+                                  size: 30,
+                                ),
+                              ),
+                              Text(
+                                "Friend",
+                                style: const TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: CupertinoTextField(
+                            controller: searchController,
+                            prefix: const Padding(
+                              padding: EdgeInsets.only(left: 10),
+                              child: Icon(
+                                IconsaxPlusLinear.search_normal_1,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            placeholder: "Search friend",
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              color: Color(0xFFf9fafb),
+                              borderRadius: BorderRadius.circular(50),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ))),
+          ],
+        ),
+      ),
+      body: Container(
+        color: Colors.white,
+        width: double.infinity,
+        height: double.infinity,
+        child: StreamBuilder<List<UserModel>>(
+          stream: _userService.userStream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF2FBEFF)));
+            }
+
+            if (snapshot.hasError) {
+              return const Center(child: Text("Error loading users"));
+            }
+
+            List<UserModel> users = snapshot.data ?? [];
+
+            return RefreshIndicator(
+              onRefresh: _refreshUser,
+              color: Colors.white,
+              child: users.isEmpty
+                  ? ListView.builder(
+                      itemCount: 1,
+                      itemBuilder: (context, index) {
+                        return SizedBox(
+                          width: double.infinity,
+                          height: MediaQuery.of(context).size.height * 0.65,
+                          child: const Center(child: Text("Users Empty")),
+                        );
+                      },
+                    )
+                  : ListView.builder(
+                      itemCount: users.length,
+                      itemBuilder: (context, index) {
+                        var user = users[index];
+                        return Container(
+                          color: Colors.white,
+                          child: ListTile(
+                            key: ValueKey(user.id),
+                            minTileHeight: 10,
+                            onTap: () {
+                              openRoom(user.id);
+                            },
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 7, horizontal: 10),
+                            leading: GestureDetector(
+                              onTap: () {
+                                _navigateToUserProfile(context, user);
+                              },
+                              child: user.profilePicture!.isNotEmpty
+                                  ? CircleAvatar(
+                                      backgroundImage: user.profilePicture !=
+                                                  null ||
+                                              user.profilePicture != ""
+                                          ? NetworkImage(user.profilePicture!)
+                                          : AssetImage("assets/img/user.png"),
+                                      radius: 25,
+                                    )
+                                  : Image.asset("assets/img/user.png"),
+                            ),
+                            title: Text(
+                              user.name ?? "",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            subtitle: Text(
+                              user.bio ?? "",
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            trailing: FilledButton(
+                                onPressed: () {
+                                  changeFriendship(user.id);
+                                },
+                                style: ButtonStyle(
+                                    backgroundColor: WidgetStatePropertyAll(
+                                        !user.isFriend
+                                            ? Colors.blue
+                                            : Colors.red),
+                                    foregroundColor:
+                                        WidgetStatePropertyAll(Colors.white),
+                                    padding: WidgetStatePropertyAll(
+                                        EdgeInsets.all(0)),
+                                    shape: WidgetStatePropertyAll(
+                                        RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10)))),
+                                child: SizedBox(
+                                  width: 150,
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        !user.isFriend
+                                            ? IconsaxPlusLinear.user_add
+                                            : IconsaxPlusLinear.user_remove,
+                                        size: 20,
+                                      ),
+                                      SizedBox(
+                                        width: 5,
+                                      ),
+                                      Text(
+                                        !user.isFriend
+                                            ? "Add Friend"
+                                            : "Remove Friend",
+                                        style: TextStyle(fontSize: 14),
+                                      )
+                                    ],
+                                  ),
+                                )),
+                          ),
+                        );
+                      },
+                    ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
