@@ -98,7 +98,7 @@ class _UserProfileState extends State<UserProfile> {
       'timestamp': FieldValue.serverTimestamp(),
     });
 
-    await AgoraService.init(channelName);
+    await AgoraService.init(channelName, "");
 
     await Navigator.push(
       // ignore: use_build_context_synchronously

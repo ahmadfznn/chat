@@ -77,7 +77,7 @@ class UserService {
       for (var user in updatedUsers) {
         var existingUser = await _userDatabase.getUserById(user.id);
         if (existingUser == null) {
-          await _userDatabase.insertUser(user);
+          await _userDatabase.upsertUser(user);
         } else {
           await _userDatabase.updateUser(user);
         }

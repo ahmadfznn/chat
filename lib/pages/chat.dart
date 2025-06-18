@@ -17,7 +17,6 @@ class Chat extends StatefulWidget {
   final Map<String, dynamic> user;
 
   @override
-  // ignore: library_private_types_in_public_api
   _ChatState createState() => _ChatState();
 }
 
@@ -33,7 +32,6 @@ Route _goPage(Widget page) {
       final tween = Tween(begin: begin, end: end)
           .chain(CurveTween(curve: Curves.easeInOutExpo));
       final offsetAnimation = animation.drive(tween);
-
       return SlideTransition(
         position: offsetAnimation,
         child: child,
@@ -84,22 +82,64 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
     }
   }
 
-  void openProfilePicture(BuildContext context, ChatRoomModel data) {
+  void _showProfileDialog(BuildContext context, ChatRoomModel data) {
     showDialog(
       context: context,
       builder: (context) {
+        final colorScheme = Theme.of(context).colorScheme;
         return Dialog(
-          backgroundColor: Colors.black,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-          insetPadding: EdgeInsets.zero,
-          child: SizedBox(
-            width: 200,
-            height: 270,
-            child: Image.asset(
-              "assets/img/user.png",
-              fit: BoxFit.cover,
-              width: 200,
-              height: 200,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: colorScheme.background,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 60,
+                  backgroundImage: (data.recipientPhoto != null &&
+                          data.recipientPhoto!.isNotEmpty)
+                      ? NetworkImage(data.recipientPhoto!)
+                      : const AssetImage("assets/img/user.png")
+                          as ImageProvider,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  data.recipientName,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _ProfileDialogAction(
+                      icon: Icons.call,
+                      label: "Call",
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                    _ProfileDialogAction(
+                      icon: Icons.videocam,
+                      label: "Video Call",
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                    _ProfileDialogAction(
+                      icon: Icons.person,
+                      label: "View Profile",
+                      onTap: () {
+                        Navigator.pop(context);
+                        _navigateToUserProfile(context, data.recipientId);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
             ),
           ),
         );
@@ -109,223 +149,271 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface,
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.push(
           context,
           _goPage(Friend(user: widget.user)),
         ),
-        backgroundColor: const Color(0xFF2fbffb),
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         shape: const CircleBorder(),
         child: Icon(IconsaxPlusBold.message_add, size: 30),
       ),
       body: StreamBuilder<List<ChatRoomModel>>(
         stream: _roomService.chatRoomsStream,
         builder: (context, snapshot) {
-          print("StreamBuilder triggered. Data: ${snapshot.data}");
-
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
                 child: CircularProgressIndicator(color: Color(0xFF2FBEFF)));
           }
-
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text("Chat Empty"));
           }
-
           List<ChatRoomModel> chatRooms = snapshot.data!;
-
-          return RefreshIndicator(
-            onRefresh: _refreshChat,
-            color: const Color(0xFF2FBEFF),
-            child: ListView.builder(
-              itemCount: chatRooms.length,
-              itemBuilder: (context, index) {
-                var data = chatRooms[index];
-
-                void handleLongPress() {
-                  if (!chatController.showSelect.value) {
-                    chatController.showSelect.value = true;
-                    chatController.selectedChat.add(data.id);
-                  }
-                }
-
-                void handleTap() {
-                  if (chatController.selectedChat.contains(data.id)) {
-                    chatController.selectedChat.remove(data.id);
-                    if (chatController.selectedChat.isEmpty) {
-                      chatController.showSelect.value = false;
-                    }
-                  } else if (chatController.showSelect.value) {
-                    chatController.selectedChat.add(data.id);
-                  } else {
-                    Navigator.push(context,
-                        _goPage(DetailChat(data: data, user: widget.user)));
-                  }
-                }
-
-                return Obx(() {
-                  return ListTile(
-                    key: ValueKey(data.id),
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                    leading: GestureDetector(
-                      onTap: () {
-                        // _navigateToUserProfile(context, data.recipientId);
-                        openProfilePicture(context, data);
-                      },
-                      child: Stack(
-                        alignment: Alignment.bottomRight,
-                        children: [
-                          CircleAvatar(
-                            backgroundImage: (data.recipientPhoto != null &&
-                                    data.recipientPhoto!.isNotEmpty)
-                                ? NetworkImage(data.recipientPhoto!)
-                                : AssetImage("assets/img/user.png"),
-                            radius: 25,
-                          ),
-                          StreamBuilder<Map<String, dynamic>>(
-                              stream: StatusService()
-                                  .getUserOnlineStatus(data.recipientId),
-                              builder: (context, snapshot) {
-                                if (!snapshot.hasData) {
-                                  return Positioned(
-                                    bottom: 2,
-                                    right: 2,
-                                    child: Container(),
-                                  );
-                                }
-
-                                bool isOnline =
-                                    snapshot.data!['status'] ?? false;
-                                if (isOnline) {
-                                  return Positioned(
-                                    bottom: 2,
-                                    right: 2,
-                                    child: Container(
-                                      width: 14,
-                                      height: 14,
-                                      decoration: BoxDecoration(
-                                          color: Colors.green,
-                                          border: Border.all(
-                                              color: Colors.white, width: 1),
-                                          borderRadius:
-                                              BorderRadius.circular(7)),
-                                    ),
-                                  );
-                                } else {
-                                  return Positioned(
-                                    bottom: 2,
-                                    right: 2,
-                                    child: Container(),
-                                  );
-                                }
-                              })
-                        ],
-                      ),
-                    ),
-                    horizontalTitleGap: 10,
-                    tileColor: chatController.selectedChat.contains(data.id)
-                        ? Colors.grey[300]
-                        : Colors.white,
-                    title: Text(
-                      data.recipientName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    subtitle: StreamBuilder(
-                        stream: StatusService()
-                            .getUserTypingStatus(data.id, data.recipientId),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return data.type == 'text'
-                                ? Text(
-                                    data.lastMessage ?? '',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 14),
-                                  )
-                                : data.type!.isNotEmpty
-                                    ? Row(
-                                        children: [
-                                          Icon(
-                                            data.type != 'file'
-                                                ? Icons.photo
-                                                : Icons.folder,
-                                            color: Colors.grey.shade600,
-                                          )
-                                        ],
-                                      )
-                                    : Container();
+          return Obx(() {
+            String search =
+                chatController.searchQuery.value.trim().toLowerCase();
+            List<ChatRoomModel> filteredRooms = search.isEmpty
+                ? chatRooms
+                : chatRooms
+                    .where((room) =>
+                        room.recipientName.toLowerCase().contains(search))
+                    .toList();
+            return RefreshIndicator(
+              onRefresh: _refreshChat,
+              color: const Color(0xFF2FBEFF),
+              child: filteredRooms.isEmpty
+                  ? const Center(child: Text("No chats found"))
+                  : ListView.builder(
+                      itemCount: filteredRooms.length,
+                      itemBuilder: (context, index) {
+                        var data = filteredRooms[index];
+                        void handleLongPress() {
+                          if (!chatController.showSelect.value) {
+                            chatController.showSelect.value = true;
+                            chatController.selectedChat.add(data.id);
                           }
+                        }
 
-                          bool isTyping = snapshot.data!['status'] ?? false;
-
-                          if (isTyping) {
-                            return Text(
-                              'Typing...',
-                              style: const TextStyle(
-                                  color: Colors.green, fontSize: 14),
-                            );
+                        void handleTap() {
+                          if (chatController.selectedChat.contains(data.id)) {
+                            chatController.selectedChat.remove(data.id);
+                            if (chatController.selectedChat.isEmpty) {
+                              chatController.showSelect.value = false;
+                            }
+                          } else if (chatController.showSelect.value) {
+                            chatController.selectedChat.add(data.id);
                           } else {
-                            return data.type == 'text'
-                                ? Text(
-                                    data.lastMessage ?? '',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 14),
-                                  )
-                                : data.type!.isNotEmpty
-                                    ? Row(
-                                        children: [
-                                          Icon(
-                                            data.type != 'file'
-                                                ? Icons.photo
-                                                : Icons.folder,
-                                            color: Colors.grey.shade600,
-                                          )
-                                        ],
-                                      )
-                                    : Container();
+                            Navigator.push(
+                                context,
+                                _goPage(
+                                    DetailChat(data: data, user: widget.user)));
                           }
-                        }),
-                    trailing: data.status == 2 && data.unread != 0
-                        ? SizedBox(
-                            width: 30,
-                            height: 30,
-                            child: FilledButton(
-                              style: ButtonStyle(
-                                backgroundColor:
-                                    WidgetStatePropertyAll(Colors.blue),
-                                shape: WidgetStatePropertyAll(
-                                    RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(50))),
-                                padding:
-                                    WidgetStatePropertyAll(EdgeInsets.zero),
+                        }
+
+                        return Obx(() {
+                          return ListTile(
+                            key: ValueKey(data.id),
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 7, horizontal: 10),
+                            leading: GestureDetector(
+                              onTap: () {
+                                _showProfileDialog(context, data);
+                              },
+                              child: Stack(
+                                alignment: Alignment.bottomRight,
+                                children: [
+                                  CircleAvatar(
+                                    backgroundImage:
+                                        (data.recipientPhoto != null &&
+                                                data.recipientPhoto!.isNotEmpty)
+                                            ? NetworkImage(data.recipientPhoto!)
+                                            : const AssetImage(
+                                                "assets/img/user.png"),
+                                    radius: 25,
+                                  ),
+                                  StreamBuilder<Map<String, dynamic>>(
+                                      stream: StatusService()
+                                          .getUserOnlineStatus(
+                                              data.recipientId),
+                                      builder: (context, snapshot) {
+                                        if (!snapshot.hasData) {
+                                          return Positioned(
+                                            bottom: 2,
+                                            right: 2,
+                                            child: Container(),
+                                          );
+                                        }
+                                        bool isOnline =
+                                            snapshot.data!['status'] ?? false;
+                                        if (isOnline) {
+                                          return Positioned(
+                                            bottom: 2,
+                                            right: 2,
+                                            child: Container(
+                                              width: 14,
+                                              height: 14,
+                                              decoration: BoxDecoration(
+                                                  color: Colors.green,
+                                                  border: Border.all(
+                                                      color: Colors.white,
+                                                      width: 1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(7)),
+                                            ),
+                                          );
+                                        } else {
+                                          return Positioned(
+                                            bottom: 2,
+                                            right: 2,
+                                            child: Container(),
+                                          );
+                                        }
+                                      })
+                                ],
                               ),
-                              onPressed: () {},
-                              child: Text(data.unread.toString()),
                             ),
-                          )
-                        : Text(
-                            data.status != -1
-                                ? formatTimeTo24Hour(data.updatedAt)
-                                : '',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                    onLongPress: handleLongPress,
-                    onTap: handleTap,
-                  );
-                });
-              },
-            ),
-          );
+                            horizontalTitleGap: 10,
+                            tileColor: chatController.selectedChat
+                                    .contains(data.id)
+                                ? colorScheme.primaryContainer.withOpacity(0.5)
+                                : colorScheme.background,
+                            title: Text(
+                              data.recipientName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: colorScheme.onBackground),
+                            ),
+                            subtitle: StreamBuilder(
+                                stream: StatusService().getUserTypingStatus(
+                                    data.id, data.recipientId),
+                                builder: (context, snapshot) {
+                                  if (!snapshot.hasData) {
+                                    return data.type == 'text'
+                                        ? Text(
+                                            data.lastMessage ?? '',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                                fontSize: 14,
+                                                color: colorScheme.onSurface),
+                                          )
+                                        : data.type!.isNotEmpty
+                                            ? Row(
+                                                children: [
+                                                  Icon(
+                                                    data.type != 'file'
+                                                        ? Icons.photo
+                                                        : Icons.folder,
+                                                    color: colorScheme.onSurface
+                                                        .withOpacity(0.6),
+                                                  )
+                                                ],
+                                              )
+                                            : Container();
+                                  }
+                                  bool isTyping =
+                                      snapshot.data!['status'] ?? false;
+                                  if (isTyping) {
+                                    return Text(
+                                      'Typing...',
+                                      style: TextStyle(
+                                          color: Colors.green, fontSize: 14),
+                                    );
+                                  } else {
+                                    return data.type == 'text'
+                                        ? Text(
+                                            data.lastMessage ?? '',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                                fontSize: 14,
+                                                color: colorScheme.onSurface),
+                                          )
+                                        : data.type!.isNotEmpty
+                                            ? Row(
+                                                children: [
+                                                  Icon(
+                                                    data.type != 'file'
+                                                        ? Icons.photo
+                                                        : Icons.folder,
+                                                    color: colorScheme.onSurface
+                                                        .withOpacity(0.6),
+                                                  )
+                                                ],
+                                              )
+                                            : Container();
+                                  }
+                                }),
+                            trailing: data.status == 2 && data.unread != 0
+                                ? SizedBox(
+                                    width: 30,
+                                    height: 30,
+                                    child: FilledButton(
+                                      style: ButtonStyle(
+                                        backgroundColor: WidgetStatePropertyAll(
+                                            colorScheme.primary),
+                                        shape: WidgetStatePropertyAll(
+                                            RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(50))),
+                                        padding: WidgetStatePropertyAll(
+                                            EdgeInsets.zero),
+                                      ),
+                                      onPressed: () {},
+                                      child: Text(data.unread.toString()),
+                                    ),
+                                  )
+                                : Text(
+                                    data.status != -1
+                                        ? formatTimeTo24Hour(data.updatedAt)
+                                        : '',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        color: colorScheme.onSurface),
+                                  ),
+                            onLongPress: handleLongPress,
+                            onTap: handleTap,
+                          );
+                        });
+                      },
+                    ),
+            );
+          });
         },
+      ),
+    );
+  }
+}
+
+class _ProfileDialogAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  const _ProfileDialogAction(
+      {required this.icon, required this.label, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Column(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.blue.shade50,
+            child: Icon(icon, color: Colors.blue, size: 28),
+            radius: 28,
+          ),
+          const SizedBox(height: 6),
+          Text(label, style: const TextStyle(fontSize: 13)),
+        ],
       ),
     );
   }

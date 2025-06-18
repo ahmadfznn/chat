@@ -16,6 +16,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'controllers/theme_controller.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -93,6 +94,7 @@ void main() async {
     androidProvider: AndroidProvider.debug,
   );
 
+  Get.put(ThemeController());
   runApp(const MainApp());
 }
 
@@ -134,16 +136,20 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    final ThemeController themeController = Get.find();
+    return Obx(() => GetMaterialApp(
       title: "Chat",
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.system,
+      themeMode: themeController.themeMode.value,
       theme: ThemeData(
         useMaterial3: true,
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
       ),
+      darkTheme: ThemeData.dark().copyWith(
+        textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
+      ),
       home: const MainAppScreen(),
-    );
+    ));
   }
 }
 

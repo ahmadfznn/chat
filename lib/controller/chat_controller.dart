@@ -6,5 +6,8 @@ class ChatController extends GetxController {
   RxBool showSelect = false.obs;
   RxBool isLoading = false.obs;
 
+  // For chat search
+  RxString searchQuery = ''.obs;
+
   Future openRoom(String id) async {}
 }

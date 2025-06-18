@@ -20,6 +20,8 @@ class CallScreen extends StatefulWidget {
 class _CallScreenState extends State<CallScreen> {
   late final RtcEngine _engine;
   int? remoteUid;
+  bool muted = false;
+  bool videoOff = false;
 
   @override
   void initState() {
@@ -28,36 +30,39 @@ class _CallScreenState extends State<CallScreen> {
   }
 
   Future<void> initAgora() async {
-    _engine = createAgoraRtcEngine();
-    await _engine.initialize(
-      RtcEngineContext(appId: appId),
-    );
+    try {
+      _engine = createAgoraRtcEngine();
+      await _engine.initialize(RtcEngineContext(appId: appId));
+      await _engine.enableVideo();
+      await _engine.startPreview();
 
-    await _engine.enableVideo();
+      _engine.registerEventHandler(
+        RtcEngineEventHandler(
+          onError: (errCode, errMsg) {
+            debugPrint('Agora error: \$errCode - \$errMsg');
+          },
+          onUserJoined: (connection, uid, elapsed) {
+            setState(() {
+              remoteUid = uid;
+            });
+          },
+          onUserOffline: (connection, uid, reason) {
+            setState(() {
+              remoteUid = null;
+            });
+          },
+        ),
+      );
 
-    _engine.registerEventHandler(
-      RtcEngineEventHandler(
-        onUserJoined: (connection, uid, elapsed) {
-          setState(() {
-            remoteUid = uid;
-          });
-        },
-        onUserOffline: (connection, uid, reason) {
-          setState(() {
-            remoteUid = null;
-          });
-        },
-      ),
-    );
-
-    await _engine.startPreview();
-
-    await _engine.joinChannel(
-      token: widget.token,
-      channelId: widget.channelName,
-      uid: 0,
-      options: const ChannelMediaOptions(),
-    );
+      await _engine.joinChannel(
+        token: widget.token,
+        channelId: widget.channelName,
+        uid: 0,
+        options: const ChannelMediaOptions(),
+      );
+    } catch (e) {
+      debugPrint('Agora initialization failed: \$e');
+    }
   }
 
   @override
@@ -65,6 +70,16 @@ class _CallScreenState extends State<CallScreen> {
     _engine.leaveChannel();
     _engine.release();
     super.dispose();
+  }
+
+  void _onToggleMute() {
+    setState(() => muted = !muted);
+    _engine.muteLocalAudioStream(muted);
+  }
+
+  void _onToggleVideo() {
+    setState(() => videoOff = !videoOff);
+    _engine.muteLocalVideoStream(videoOff);
   }
 
   @override
@@ -86,12 +101,14 @@ class _CallScreenState extends State<CallScreen> {
             left: 20,
             width: 120,
             height: 160,
-            child: AgoraVideoView(
-              controller: VideoViewController(
-                rtcEngine: _engine,
-                canvas: const VideoCanvas(uid: 0),
-              ),
-            ),
+            child: videoOff
+                ? const ColoredBox(color: Colors.black)
+                : AgoraVideoView(
+                    controller: VideoViewController(
+                      rtcEngine: _engine,
+                      canvas: const VideoCanvas(uid: 0),
+                    ),
+                  ),
           ),
           Align(
             alignment: Alignment.bottomCenter,
@@ -101,18 +118,16 @@ class _CallScreenState extends State<CallScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.mic_off),
-                    onPressed: () {},
+                    icon: Icon(muted ? Icons.mic : Icons.mic_off),
+                    onPressed: _onToggleMute,
                   ),
                   IconButton(
                     icon: const Icon(Icons.call_end, color: Colors.red),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                    onPressed: () => Navigator.pop(context),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.videocam_off),
-                    onPressed: () {},
+                    icon: Icon(videoOff ? Icons.videocam : Icons.videocam_off),
+                    onPressed: _onToggleVideo,
                   ),
                 ],
               ),

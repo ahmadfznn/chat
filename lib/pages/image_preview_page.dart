@@ -78,7 +78,9 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
   }
 
   void _uploadImage() {
+    // Start upload, but immediately pop and notify previous page
     _uploadToFirebase();
+    Navigator.pop(context, true); // Pass a result to trigger refresh
   }
 
   @override

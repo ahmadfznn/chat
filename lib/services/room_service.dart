@@ -93,7 +93,7 @@ class RoomService {
 
         var existingRoom = await _roomDatabase.getChatRoomById(room.id);
         if (existingRoom == null) {
-          await _roomDatabase.insertChatRoom(room);
+          await _roomDatabase.upsertChatRoom(room);
         } else if (existingRoom.updatedAt != room.updatedAt) {
           await _roomDatabase.updateChatRoom(room);
         }
@@ -138,7 +138,7 @@ class RoomService {
             updatedAt: DateTime.now().millisecondsSinceEpoch,
           );
 
-          await _roomDatabase.insertChatRoom(newLocalRoom);
+          await _roomDatabase.upsertChatRoom(newLocalRoom);
 
           return {"status": true, "data": newLocalRoom};
         }
@@ -180,7 +180,7 @@ class RoomService {
       if (foundRoom != null) {
         var existingRoom = await _roomDatabase.getChatRoomById(foundRoom.id);
         if (existingRoom == null) {
-          await _roomDatabase.insertChatRoom(foundRoom);
+          await _roomDatabase.upsertChatRoom(foundRoom);
         }
 
         return {"status": true, "data": foundRoom};
@@ -216,7 +216,7 @@ class RoomService {
         updatedAt: DateTime.now().millisecondsSinceEpoch,
       );
 
-      await _roomDatabase.insertChatRoom(newRoom);
+      await _roomDatabase.upsertChatRoom(newRoom);
 
       return {"status": true, "data": newRoom};
     } catch (e) {

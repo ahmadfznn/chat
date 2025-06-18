@@ -46,6 +46,8 @@ dependencies:
   open_filex: ^4.7.0
   image_editor_plus: ^1.0.6
   agora_rtc_engine: ^6.5.2
+  url_launcher: ^6.2.5
+  package_info_plus: ^8.3.0
 
 dev_dependencies:
   flutter_test:

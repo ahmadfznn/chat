@@ -366,8 +366,8 @@ class _SettingState extends State<Setting> {
                             ),
                             ListTile(
                               onTap: () async {
-                                await Navigator.push(context,
-                                    _goPage(HelpPage(user: widget.user)));
+                                await Navigator.push(
+                                    context, _goPage(HelpPage()));
                               },
                               leading: Icon(
                                 Icons.help_outline,

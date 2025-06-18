@@ -1,6 +1,8 @@
 import 'package:chat/services/local_database.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get/get.dart';
+import '../../controllers/theme_controller.dart';
 
 class PersonalizationPage extends StatefulWidget {
   const PersonalizationPage({super.key, required this.user});
@@ -35,7 +37,7 @@ Route _goPage(Widget page) {
 class _PersonalizationPageState extends State<PersonalizationPage> {
   final LocalDatabase dbs = LocalDatabase.instance;
   late Map<String, dynamic> user;
-  String theme = "light";
+  final ThemeController themeController = Get.find();
 
   @override
   void initState() {
@@ -45,14 +47,6 @@ class _PersonalizationPageState extends State<PersonalizationPage> {
 
   void clear() async {
     await dbs.resetDatabase();
-  }
-
-  void changeTheme(String val) async {
-    SharedPreferences local = await SharedPreferences.getInstance();
-    setState(() {
-      theme = val;
-    });
-    await local.setString("themeMode", val);
   }
 
   @override
@@ -97,132 +91,140 @@ class _PersonalizationPageState extends State<PersonalizationPage> {
                               style: TextStyle(color: Colors.grey.shade700),
                             ),
                             tileColor: Colors.white,
-                            trailing: Wrap(
-                              direction: Axis.horizontal,
-                              spacing: 5,
-                              children: [
-                                ElevatedButton(
-                                    style: ButtonStyle(
-                                        padding: WidgetStatePropertyAll(
-                                            EdgeInsets.symmetric(
-                                                horizontal: 5)),
-                                        backgroundColor: WidgetStatePropertyAll(
-                                            theme == "light"
-                                                ? Colors.blue
-                                                : Colors.white),
-                                        shape: WidgetStatePropertyAll(
-                                            RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(5)))),
-                                    onPressed: () {
-                                      setState(() {
-                                        theme = "light";
-                                      });
-                                    },
-                                    child: Wrap(
-                                      direction: Axis.horizontal,
-                                      crossAxisAlignment:
-                                          WrapCrossAlignment.center,
-                                      spacing: 2,
-                                      children: [
-                                        Icon(
-                                          Icons.light_mode,
-                                          color: theme == "light"
-                                              ? Colors.white
-                                              : Colors.black,
-                                        ),
-                                        Text(
-                                          "Light",
-                                          style: TextStyle(
+                            trailing: Obx(() {
+                              ThemeMode mode = themeController.themeMode.value;
+                              String theme = mode == ThemeMode.light
+                                  ? 'light'
+                                  : mode == ThemeMode.dark
+                                      ? 'dark'
+                                      : 'auto';
+                              return Wrap(
+                                direction: Axis.horizontal,
+                                spacing: 5,
+                                children: [
+                                  ElevatedButton(
+                                      style: ButtonStyle(
+                                          padding: WidgetStatePropertyAll(
+                                              EdgeInsets.symmetric(
+                                                  horizontal: 5)),
+                                          backgroundColor:
+                                              WidgetStatePropertyAll(
+                                                  theme == "light"
+                                                      ? Colors.blue
+                                                      : Colors.white),
+                                          shape: WidgetStatePropertyAll(
+                                              RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          5)))),
+                                      onPressed: () {
+                                        themeController.setThemeMode("light");
+                                      },
+                                      child: Wrap(
+                                        direction: Axis.horizontal,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        spacing: 2,
+                                        children: [
+                                          Icon(
+                                            Icons.light_mode,
                                             color: theme == "light"
                                                 ? Colors.white
                                                 : Colors.black,
                                           ),
-                                        )
-                                      ],
-                                    )),
-                                ElevatedButton(
-                                    style: ButtonStyle(
-                                        padding: WidgetStatePropertyAll(
-                                            EdgeInsets.symmetric(
-                                                horizontal: 5)),
-                                        backgroundColor: WidgetStatePropertyAll(
-                                            theme == "dark"
-                                                ? Colors.blue
-                                                : Colors.white),
-                                        shape: WidgetStatePropertyAll(
-                                            RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(5)))),
-                                    onPressed: () {
-                                      setState(() {
-                                        theme = "dark";
-                                      });
-                                    },
-                                    child: Wrap(
-                                      direction: Axis.horizontal,
-                                      crossAxisAlignment:
-                                          WrapCrossAlignment.center,
-                                      spacing: 2,
-                                      children: [
-                                        Icon(
-                                          Icons.dark_mode,
-                                          color: theme == "dark"
-                                              ? Colors.white
-                                              : Colors.black,
-                                        ),
-                                        Text(
-                                          "Dark",
-                                          style: TextStyle(
+                                          Text(
+                                            "Light",
+                                            style: TextStyle(
+                                              color: theme == "light"
+                                                  ? Colors.white
+                                                  : Colors.black,
+                                            ),
+                                          )
+                                        ],
+                                      )),
+                                  ElevatedButton(
+                                      style: ButtonStyle(
+                                          padding: WidgetStatePropertyAll(
+                                              EdgeInsets.symmetric(
+                                                  horizontal: 5)),
+                                          backgroundColor:
+                                              WidgetStatePropertyAll(
+                                                  theme == "dark"
+                                                      ? Colors.blue
+                                                      : Colors.white),
+                                          shape: WidgetStatePropertyAll(
+                                              RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          5)))),
+                                      onPressed: () {
+                                        themeController.setThemeMode("dark");
+                                      },
+                                      child: Wrap(
+                                        direction: Axis.horizontal,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        spacing: 2,
+                                        children: [
+                                          Icon(
+                                            Icons.dark_mode,
                                             color: theme == "dark"
                                                 ? Colors.white
                                                 : Colors.black,
                                           ),
-                                        )
-                                      ],
-                                    )),
-                                ElevatedButton(
-                                    style: ButtonStyle(
-                                        padding: WidgetStatePropertyAll(
-                                            EdgeInsets.symmetric(
-                                                horizontal: 5)),
-                                        backgroundColor: WidgetStatePropertyAll(
-                                            theme == "auto"
-                                                ? Colors.blue
-                                                : Colors.white),
-                                        shape: WidgetStatePropertyAll(
-                                            RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(5)))),
-                                    onPressed: () {
-                                      setState(() {
-                                        theme = "auto";
-                                      });
-                                    },
-                                    child: Wrap(
-                                      direction: Axis.horizontal,
-                                      crossAxisAlignment:
-                                          WrapCrossAlignment.center,
-                                      spacing: 2,
-                                      children: [
-                                        Icon(
-                                          Icons.phone_android,
-                                          color: theme == "auto"
-                                              ? Colors.white
-                                              : Colors.black,
-                                        ),
-                                        Text(
-                                          "Auto",
-                                          style: TextStyle(
+                                          Text(
+                                            "Dark",
+                                            style: TextStyle(
+                                              color: theme == "dark"
+                                                  ? Colors.white
+                                                  : Colors.black,
+                                            ),
+                                          )
+                                        ],
+                                      )),
+                                  ElevatedButton(
+                                      style: ButtonStyle(
+                                          padding: WidgetStatePropertyAll(
+                                              EdgeInsets.symmetric(
+                                                  horizontal: 5)),
+                                          backgroundColor:
+                                              WidgetStatePropertyAll(
+                                                  theme == "auto"
+                                                      ? Colors.blue
+                                                      : Colors.white),
+                                          shape: WidgetStatePropertyAll(
+                                              RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          5)))),
+                                      onPressed: () {
+                                        themeController.setThemeMode("auto");
+                                      },
+                                      child: Wrap(
+                                        direction: Axis.horizontal,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        spacing: 2,
+                                        children: [
+                                          Icon(
+                                            Icons.phone_android,
                                             color: theme == "auto"
                                                 ? Colors.white
                                                 : Colors.black,
                                           ),
-                                        )
-                                      ],
-                                    )),
-                              ],
-                            ),
+                                          Text(
+                                            "Auto",
+                                            style: TextStyle(
+                                              color: theme == "auto"
+                                                  ? Colors.white
+                                                  : Colors.black,
+                                            ),
+                                          )
+                                        ],
+                                      )),
+                                ],
+                              );
+                            }),
                             shape: Border(
                                 bottom:
                                     BorderSide(color: Colors.grey.shade300)),

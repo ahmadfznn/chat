@@ -4,8 +4,14 @@ import 'package:chat/pages/auth/register/password.dart';
 import 'package:chat/pages/auth/register/profile_picture.dart';
 import 'package:chat/pages/auth/register/username.dart';
 import 'package:chat/controller/register_controller.dart';
+import 'package:chat/components/popup.dart';
+import 'package:chat/layout.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key, required this.pageController});
@@ -43,244 +49,236 @@ class _RegisterState extends State<Register> {
   bool loading = false;
   bool loadingGoogle = false;
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _disableScreenshot();
-  // }
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _passwordControllerConfirmation =
+      TextEditingController();
 
-  // @override
-  // void dispose() {
-  //   _enableScreenshot();
-  //   super.dispose();
-  // }
+  bool get pwdNotSame =>
+      _passwordController.text != _passwordControllerConfirmation.text;
 
-  // Future<void> _disableScreenshot() async {
-  //   await FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
-  // }
+  // Example policy variable, set to true for now
+  bool policy = true;
 
-  // Future<void> _enableScreenshot() async {
-  //   await FlutterWindowManager.clearFlags(FlutterWindowManager.FLAG_SECURE);
-  // }
+  void _registerUser(BuildContext context, String type) async {
+    try {
+      if (type == 'credentials') {
+        if (mounted) {
+          setState(() {
+            loading = true;
+          });
+        }
 
-  // void _checkFieldsAndRegister(BuildContext context, String type) {
-  //   if (_nameController.text.isEmpty ||
-  //       _emailController.text.isEmpty ||
-  //       _passwordController.text.isEmpty ||
-  //       _passwordControllerConfirmation.text.isEmpty) {
-  //     Popup().show(context, "Please fill all the fields", false);
-  //     return;
-  //   }
+        if (pwdNotSame) {
+          if (mounted) {
+            setState(() {
+              loading = false;
+            });
+          }
+          // ignore: use_build_context_synchronously
+          return Popup().show(context, "Passwords do not match", false);
+        }
 
-  //   if (!policy) {
-  //     Popup().show(context,
-  //         "Please agree to the policies and terms & conditions", false);
-  //     return;
-  //   }
+        String email = _emailController.text;
+        var next = await checkAccount(context, email);
 
-  //   _registerUser(context, type);
-  // }
+        if (next) {
+          UserCredential userCredential =
+              await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            email: email,
+            password: _passwordController.value.text,
+          );
 
-  // void _registerUser(BuildContext context, String type) async {
-  //   try {
-  //     if (type == 'credentials') {
-  //       if (mounted) {
-  //         setState(() {
-  //           loading = true;
-  //         });
-  //       }
+          await FirebaseFirestore.instance.collection('users').add({
+            "uid": userCredential.user!.uid,
+            "photo": null,
+            "name": _nameController.text.trim(),
+            "nickname": _nameController.text.split(' ')[0],
+            "title": "Kak",
+            "language": "Indonesia",
+            "email": email,
+            "telephone_number": null,
+            "bio": null,
+            "verified": false,
+            "agent_name": "Lea",
+            "agent_lang": "Indonesia",
+            "agent_voice": "female",
+            "created_at": Timestamp.now()
+          });
 
-  //       if (pwdNotSame) {
-  //         if (mounted) {
-  //           setState(() {
-  //             loading = false;
-  //           });
-  //         }
-  //         // ignore: use_build_context_synchronously
-  //         return Popup().show(context, "Passwords do not match", false);
-  //       }
+          User? user = userCredential.user;
+          await signUpSuccess(context, user);
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            loadingGoogle = true;
+          });
+        }
 
-  //       String email = _emailController.text;
-  //       var next = await checkAccount(email);
+        UserCredential userCredential = await signUpWithGoogle();
+        User? user = userCredential.user!;
 
-  //       if (next) {
-  //         UserCredential userCredential =
-  //             await FirebaseAuth.instance.createUserWithEmailAndPassword(
-  //           email: email,
-  //           password: _passwordController.value.text,
-  //         );
+        var next = await checkAccount(context, user.email!);
 
-  //         await FirebaseFirestore.instance.collection('users').add({
-  //           "uid": userCredential.user!.uid,
-  //           "photo": null,
-  //           "name": _nameController.text.trim(),
-  //           "nickname": _nameController.text.split(' ')[0],
-  //           "title": "Kak",
-  //           "language": "Indonesia",
-  //           "email": email,
-  //           "telephone_number": null,
-  //           "bio": null,
-  //           "verified": false,
-  //           "agent_name": "Lea",
-  //           "agent_lang": "Indonesia",
-  //           "agent_voice": "female",
-  //           "created_at": Timestamp.now()
-  //         });
+        if (next) {
+          await FirebaseFirestore.instance.collection('users').add({
+            "uid": user.uid,
+            "photo": user.photoURL,
+            "name": user.displayName,
+            "nickname": user.displayName!.split(" ")[0],
+            "title": "Kak",
+            "language": "Indonesia",
+            "email": user.email,
+            "telephone_number": user.phoneNumber,
+            "bio": null,
+            "verified": true,
+            "agent_name": "Lea",
+            "agent_lang": "Indonesia",
+            "agent_voice": "female",
+            "created_at": Timestamp.now()
+          });
 
-  //         User? user = userCredential.user;
-  //         await signUpSuccess(user);
-  //       }
-  //     } else {
-  //       if (mounted) {
-  //         setState(() {
-  //           loadingGoogle = true;
-  //         });
-  //       }
+          final String? token = await user.getIdToken();
+          final SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString("user_id", user.uid);
+          await prefs.setString("token", token!);
 
-  //       UserCredential userCredential = await signUpWithGoogle();
-  //       User? user = userCredential.user!;
+          if (mounted) {
+            setState(() {
+              _emailController.clear();
+              _nameController.clear();
+              _passwordController.clear();
+              _passwordControllerConfirmation.clear();
+              loading = false;
+              loadingGoogle = false;
+            });
+          }
 
-  //       var next = await checkAccount(user.email!);
+          await Navigator.pushAndRemoveUntil(
+            // ignore: use_build_context_synchronously
+            context,
+            _goPage(Layout(user: {
+              "uid": user.uid,
+              "photo": user.photoURL,
+              "name": user.displayName,
+              "nickname": user.displayName != null
+                  ? user.displayName!.split(" ")[0]
+                  : "",
+              "title": "Kak",
+              "language": "Indonesia",
+              "email": user.email,
+              "telephone_number": user.phoneNumber,
+              "bio": null,
+              "verified": true,
+              "agent_name": "Lea",
+              "agent_lang": "Indonesia",
+              "agent_voice": "female",
+              "created_at": Timestamp.now()
+            })),
+            (route) => false,
+          );
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        setState(() {
+          _passwordController.clear();
+          _passwordControllerConfirmation.clear();
+          loading = false;
+          loadingGoogle = false;
+        });
+      }
+      // ignore: use_build_context_synchronously
+      Popup().show(context, e.message!, false);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _passwordController.clear();
+          _passwordControllerConfirmation.clear();
+          loading = false;
+          loadingGoogle = false;
+        });
+      }
+      // ignore: use_build_context_synchronously
+      Popup().show(context, "An unexpected error occurred", false);
+    }
+  }
 
-  //       if (next) {
-  //         await FirebaseFirestore.instance.collection('users').add({
-  //           "uid": user.uid,
-  //           "photo": user.photoURL,
-  //           "name": user.displayName,
-  //           "nickname": user.displayName!.split(" ")[0],
-  //           "title": "Kak",
-  //           "language": "Indonesia",
-  //           "email": user.email,
-  //           "telephone_number": user.phoneNumber,
-  //           "bio": null,
-  //           "verified": true,
-  //           "agent_name": "Lea",
-  //           "agent_lang": "Indonesia",
-  //           "agent_voice": "female",
-  //           "created_at": Timestamp.now()
-  //         });
+  Future<bool> checkAccount(BuildContext context, String email) async {
+    var userQuery = await FirebaseFirestore.instance
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .get();
 
-  //         final String? token = await user.getIdToken();
-  //         final SharedPreferences prefs = await SharedPreferences.getInstance();
-  //         await prefs.setString("user_id", user.uid);
-  //         await prefs.setString("token", token!);
+    if (userQuery.docs.isNotEmpty) {
+      setState(() {
+        loading = false;
+        loadingGoogle = false;
+        _nameController.clear();
+        _emailController.clear();
+        _passwordController.clear();
+        _passwordControllerConfirmation.clear();
+      });
 
-  //         if (mounted) {
-  //           setState(() {
-  //             _emailController.clear();
-  //             _nameController.clear();
-  //             _passwordController.clear();
-  //             _passwordControllerConfirmation.clear();
-  //             loading = false;
-  //             loadingGoogle = false;
-  //           });
-  //         }
+      await FirebaseAuth.instance.signOut();
+      await GoogleSignIn().signOut();
 
-  //         await Navigator.pushAndRemoveUntil(
-  //           // ignore: use_build_context_synchronously
-  //           context,
-  //           _goPage(const Layout()),
-  //           (route) => false,
-  //         );
-  //       }
-  //     }
-  //   } on FirebaseAuthException catch (e) {
-  //     if (mounted) {
-  //       setState(() {
-  //         _passwordController.clear();
-  //         _passwordControllerConfirmation.clear();
-  //         loading = false;
-  //         loadingGoogle = false;
-  //       });
-  //     }
-  //     // ignore: use_build_context_synchronously
-  //     Popup().show(context, e.message!, false);
-  //   } catch (e) {
-  //     if (mounted) {
-  //       setState(() {
-  //         _passwordController.clear();
-  //         _passwordControllerConfirmation.clear();
-  //         loading = false;
-  //         loadingGoogle = false;
-  //       });
-  //     }
-  //     // ignore: use_build_context_synchronously
-  //     Popup().show(context, "An unexpected error occurred", false);
-  //   }
-  // }
+      // ignore: use_build_context_synchronously
+      Popup().show(context, "Email already in use", false);
+      return false;
+    } else {
+      return true;
+    }
+  }
 
-  // Future<bool> checkAccount(String email) async {
-  //   var userQuery = await FirebaseFirestore.instance
-  //       .collection('users')
-  //       .where('email', isEqualTo: email)
-  //       .get();
+  Future<void> signUpSuccess(BuildContext context, User? user) async {
+    if (user != null) {
+      await user.reload();
 
-  //   if (userQuery.docs.isNotEmpty) {
-  //     setState(() {
-  //       loading = false;
-  //       loadingGoogle = false;
-  //       _nameController.clear();
-  //       _emailController.clear();
-  //       _passwordController.clear();
-  //       _passwordControllerConfirmation.clear();
-  //     });
+      setState(() {
+        _emailController.clear();
+        _passwordController.clear();
+        _passwordControllerConfirmation.clear();
+      });
 
-  //     await FirebaseAuth.instance.signOut();
-  //     await GoogleSignIn().signOut();
+      // You may want to send OTP or navigate to another page here
+      setState(() {
+        loading = false;
+        loadingGoogle = false;
+      });
 
-  //     // ignore: use_build_context_synchronously
-  //     Popup().show(context, "Email already in use", false);
-  //     return false;
-  //   } else {
-  //     return true;
-  //   }
-  // }
+      await Navigator.push(
+          // ignore: use_build_context_synchronously
+          context,
+          _goPage(Container(
+              child: Center(
+                  child: Text(
+                      'Registration Success! Please verify your email.')))));
+    } else {
+      setState(() {
+        _passwordController.clear();
+        _passwordControllerConfirmation.clear();
+        loading = false;
+        loadingGoogle = false;
+      });
+    }
+  }
 
-  // Future<void> signUpSuccess(User? user) async {
-  //   if (user != null) {
-  //     await user.reload();
+  Future<UserCredential> signUpWithGoogle() async {
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-  //     setState(() {
-  //       _emailController.clear();
-  //       _passwordController.clear();
-  //       _passwordControllerConfirmation.clear();
-  //     });
+    final GoogleSignInAuthentication? googleAuth =
+        await googleUser?.authentication;
 
-  //     // ignore: use_build_context_synchronously
-  //     await AuthController().sendOtp(context, user.email!);
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
 
-  //     setState(() {
-  //       loading = false;
-  //       loadingGoogle = false;
-  //     });
-
-  //     await Navigator.push(
-  //         // ignore: use_build_context_synchronously
-  //         context,
-  //         _goPage(Otp(user: user, email: user.email!, type: "register")));
-  //   } else {
-  //     setState(() {
-  //       _passwordController.clear();
-  //       _passwordControllerConfirmation.clear();
-  //       loading = false;
-  //       loadingGoogle = false;
-  //     });
-  //   }
-  // }
-
-  // Future<UserCredential> signUpWithGoogle() async {
-  //   final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-  //   final GoogleSignInAuthentication? googleAuth =
-  //       await googleUser?.authentication;
-
-  //   final credential = GoogleAuthProvider.credential(
-  //     accessToken: googleAuth?.accessToken,
-  //     idToken: googleAuth?.idToken,
-  //   );
-
-  //   return await FirebaseAuth.instance.signInWithCredential(credential);
-  // }
+    return await FirebaseAuth.instance.signInWithCredential(credential);
+  }
 
   @override
   Widget build(BuildContext context) {

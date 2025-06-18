@@ -1,3 +1,4 @@
+import 'package:chat/components/gradient_text.dart';
 import 'package:chat/controller/call_controller.dart';
 import 'package:chat/controller/chat_controller.dart';
 import 'package:chat/controller/route_controller.dart';
@@ -71,11 +72,7 @@ class _LayoutState extends State<Layout> {
     super.initState();
     routeController.currentRoute.value = "/layout";
 
-    page = [
-      Chat(user: widget.user),
-      Story(user: widget.user),
-      Call(user: widget.user),
-    ];
+    // Remove static page list, use direct instantiation in PageView
     searchController.addListener(_onSearchChanged);
 
     _userService = UserService(widget.user['username']);
@@ -91,11 +88,12 @@ class _LayoutState extends State<Layout> {
   }
 
   void _onSearchChanged() async {
-    String searchQuery = searchController.text.toLowerCase();
+    String searchQuery = searchController.text;
 
     if (_currentIndex == 0) {
-      RoomService(widget.user['id']).searchRoom(searchQuery);
-      // chatController.searchData(searchQuery);
+      // Update the chatController's searchQuery for real-time filtering
+      chatController.searchQuery.value = searchQuery;
+      // RoomService(widget.user['id']).searchRoom(searchQuery); // Not needed for local filtering
     } else if (_currentIndex == 1) {
       // storyController.searchData(searchQuery);
     } else if (_currentIndex == 2) {
@@ -258,8 +256,10 @@ class _LayoutState extends State<Layout> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(120),
         child: Stack(
@@ -267,7 +267,7 @@ class _LayoutState extends State<Layout> {
           alignment: Alignment.bottomCenter,
           children: [
             Container(
-              color: Colors.white,
+              color: colorScheme.background,
               child: Padding(
                 padding: const EdgeInsets.only(right: 0, left: 0, top: 35),
                 child: Column(
@@ -282,12 +282,18 @@ class _LayoutState extends State<Layout> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          GradientText(
                             title[_currentIndex],
-                            style: const TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20),
+                            gradient: const LinearGradient(
+                              colors: [Colors.blue, Colors.blue, Colors.green],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 24,
+                              color: colorScheme.onBackground,
+                            ),
                           ),
                           Obx(
                             () {
@@ -407,10 +413,11 @@ class _LayoutState extends State<Layout> {
                                             onTap: () {
                                               cancelFunction();
                                             },
-                                            child: const Text(
+                                            child: Text(
                                               "Cancel",
                                               style: TextStyle(
-                                                  color: Colors.black,
+                                                  color:
+                                                      colorScheme.onBackground,
                                                   fontSize: 14,
                                                   fontWeight: FontWeight.w600),
                                             ),
@@ -466,12 +473,12 @@ class _LayoutState extends State<Layout> {
       ),
       bottomNavigationBar: Container(
         height: 60,
-        // color: Colors.white,
         decoration: BoxDecoration(
+            color: colorScheme.background,
             border: Border(
                 top: BorderSide(
-          color: Color(0xFFf3f4f6),
-        ))),
+              color: colorScheme.outline.withOpacity(0.1),
+            ))),
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -483,8 +490,8 @@ class _LayoutState extends State<Layout> {
                   child: Container(
                     width: 70,
                     color: _currentIndex == index
-                        ? Colors.lightBlue.shade50
-                        : Colors.white,
+                        ? colorScheme.primary.withOpacity(0.08)
+                        : colorScheme.background,
                     child: Stack(
                       children: [
                         if (_currentIndex == index)
@@ -494,7 +501,7 @@ class _LayoutState extends State<Layout> {
                             right: 0,
                             child: Container(
                               height: 3,
-                              color: const Color(0xFF2FBEFF),
+                              color: colorScheme.primary,
                             ),
                           ),
                         Center(
@@ -506,16 +513,18 @@ class _LayoutState extends State<Layout> {
                                 _getIconForIndex(index, _currentIndex),
                                 size: 25,
                                 color: _currentIndex == index
-                                    ? Colors.blue
-                                    : Colors.grey.shade600,
+                                    ? colorScheme.primary
+                                    : colorScheme.onSurface.withOpacity(0.6),
                               ),
                               const SizedBox(
                                 height: 3,
                               ),
                               Text(
                                 title[index],
-                                style: const TextStyle(
-                                    fontSize: 12, color: Colors.grey),
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color:
+                                        colorScheme.onSurface.withOpacity(0.7)),
                               )
                             ],
                           ),
@@ -532,7 +541,11 @@ class _LayoutState extends State<Layout> {
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChange,
-        children: page,
+        children: [
+          Chat(user: widget.user),
+          Story(user: widget.user),
+          Call(user: widget.user),
+        ],
       ),
     );
   }
