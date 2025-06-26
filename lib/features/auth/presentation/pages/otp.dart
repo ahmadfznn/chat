@@ -1,12 +1,12 @@
-import 'package:chat/pages/auth/auth.dart';
-import 'package:chat/controller/register_controller.dart';
+import 'package:chat/features/auth/presentation/pages/auth.dart';
+import 'package:chat/controllers/register_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chat/pages/auth/reset_password.dart';
+import 'package:chat/features/auth/presentation/pages/reset_password.dart';
 import 'package:chat/components/popup.dart';
-import 'package:chat/controller/auth_controller.dart';
+import 'package:chat/controllers/auth_controller.dart';
 
 class Otp extends StatefulWidget {
   const Otp({super.key, this.user, required this.email, required this.type});

@@ -2,7 +2,7 @@ import 'package:chat/services/local_database.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
-import '../../controllers/theme_controller.dart';
+import '../../../../../controllers/theme_controller.dart';
 
 class PersonalizationPage extends StatefulWidget {
   const PersonalizationPage({super.key, required this.user});

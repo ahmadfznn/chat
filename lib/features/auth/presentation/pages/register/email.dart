@@ -1,7 +1,7 @@
-import 'package:chat/pages/auth/otp.dart';
+import 'package:chat/features/auth/presentation/pages/otp.dart';
 import 'package:chat/components/popup.dart';
-import 'package:chat/controller/auth_controller.dart';
-import 'package:chat/controller/register_controller.dart';
+import 'package:chat/controllers/auth_controller.dart';
+import 'package:chat/controllers/register_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

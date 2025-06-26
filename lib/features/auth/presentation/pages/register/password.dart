@@ -1,5 +1,5 @@
-import 'package:chat/controller/register_controller.dart';
-import 'package:chat/layout.dart';
+import 'package:chat/controllers/register_controller.dart';
+import 'package:chat/core/widgets/layout.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

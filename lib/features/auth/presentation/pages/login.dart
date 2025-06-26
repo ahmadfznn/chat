@@ -1,13 +1,13 @@
-import 'package:chat/layout.dart';
+import 'package:chat/core/widgets/layout.dart';
 import 'package:chat/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
-import 'package:chat/pages/auth/forgot_password.dart';
-import 'package:chat/pages/auth/otp.dart';
+import 'package:chat/features/auth/presentation/pages/forgot_password.dart';
+import 'package:chat/features/auth/presentation/pages/otp.dart';
 import 'package:chat/components/popup.dart';
-import 'package:chat/controller/auth_controller.dart';
+import 'package:chat/controllers/auth_controller.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key, required this.pageController});

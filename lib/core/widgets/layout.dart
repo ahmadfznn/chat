@@ -1,11 +1,11 @@
 import 'package:chat/components/gradient_text.dart';
-import 'package:chat/controller/call_controller.dart';
-import 'package:chat/controller/chat_controller.dart';
-import 'package:chat/controller/route_controller.dart';
-import 'package:chat/controller/story_controller.dart';
+import 'package:chat/controllers/call_controller.dart';
+import 'package:chat/controllers/chat_controller.dart';
+import 'package:chat/controllers/route_controller.dart';
+import 'package:chat/controllers/story_controller.dart';
 import 'package:chat/pages/call.dart';
-import 'package:chat/pages/chat.dart';
-import 'package:chat/pages/setting.dart';
+import 'package:chat/features/chat/presentation/pages/chat.dart';
+import 'package:chat/features/settings/presentation/pages/setting.dart';
 import 'package:chat/pages/story.dart';
 import 'package:chat/services/room_service.dart';
 import 'package:chat/services/user_service.dart';

@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:chat/models/user_model.dart';
 import 'package:chat/pages/call_screen.dart';
-import 'package:chat/pages/detail_chat.dart';
+import 'package:chat/features/chat/presentation/pages/detail_chat.dart';
 import 'package:chat/services/agora_service.dart';
 import 'package:chat/services/room_service.dart';
 import 'package:chat/services/status_service.dart';
@@ -249,8 +249,7 @@ class _UserProfileState extends State<UserProfile> {
           leading: IconButton(
             icon: Icon(Icons.chevron_left, size: 30, color: Colors.grey[600]),
             onPressed: () {
-              // Navigator.pop(context);
-              print("Hello");
+              Navigator.pop(context);
             },
           ),
           leadingWidth: 50,
@@ -289,6 +288,7 @@ class _UserProfileState extends State<UserProfile> {
                               alignment: Alignment.bottomRight,
                               children: [
                                 CircleAvatar(
+                                  backgroundColor: Colors.white,
                                   backgroundImage: widget.data.profilePicture !=
                                               null &&
                                           widget.data.profilePicture!.isNotEmpty

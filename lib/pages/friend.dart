@@ -1,6 +1,6 @@
-import 'package:chat/controller/chat_controller.dart';
+import 'package:chat/controllers/chat_controller.dart';
 import 'package:chat/models/user_model.dart';
-import 'package:chat/pages/detail_chat.dart';
+import 'package:chat/features/chat/presentation/pages/detail_chat.dart';
 import 'package:chat/pages/user_profile.dart';
 import 'package:chat/services/room_service.dart';
 import 'package:chat/services/user_service.dart';

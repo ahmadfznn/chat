@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:chat/pages/auth/login.dart';
-import 'package:chat/pages/auth/register/register.dart';
+import 'package:chat/features/auth/presentation/pages/login.dart';
+import 'package:chat/features/auth/presentation/pages/register/register.dart';
 
 class Auth extends StatefulWidget {
   const Auth({super.key, required this.page});

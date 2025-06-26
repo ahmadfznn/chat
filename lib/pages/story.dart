@@ -150,7 +150,8 @@ class _StoryState extends State<Story> {
                     border: Border.all(color: Colors.blue, width: 4),
                     borderRadius: BorderRadius.circular(100),
                   ),
-                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  child: const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2)),
                 );
               }
               return snapshot.data ?? Container();
@@ -208,7 +209,8 @@ class _StoryState extends State<Story> {
           borderRadius: BorderRadius.circular(100),
         ),
         child: ClipOval(
-          child: Image.file(File(story.filePath), fit: BoxFit.cover, width: 70, height: 70),
+          child: Image.file(File(story.filePath),
+              fit: BoxFit.cover, width: 70, height: 70),
         ),
       );
     } else {
@@ -259,7 +261,7 @@ class _StoryState extends State<Story> {
         child: Icon(IconsaxPlusBold.camera, size: 30),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Container()
           : Container(
               padding: const EdgeInsets.all(10),
               child: Column(
@@ -313,7 +315,12 @@ class StoryViewer extends StatefulWidget {
   final int initialIndex;
   final String? profilePhoto;
   final String? displayName;
-  const StoryViewer({super.key, required this.stories, required this.initialIndex, this.profilePhoto, this.displayName});
+  const StoryViewer(
+      {super.key,
+      required this.stories,
+      required this.initialIndex,
+      this.profilePhoto,
+      this.displayName});
 
   @override
   State<StoryViewer> createState() => _StoryViewerState();
@@ -405,7 +412,8 @@ class _StoryViewerState extends State<StoryViewer> {
             left: 20,
             child: Row(
               children: [
-                if (widget.profilePhoto != null && widget.profilePhoto!.isNotEmpty)
+                if (widget.profilePhoto != null &&
+                    widget.profilePhoto!.isNotEmpty)
                   CircleAvatar(
                     backgroundImage: NetworkImage(widget.profilePhoto!),
                     radius: 20,
@@ -418,7 +426,10 @@ class _StoryViewerState extends State<StoryViewer> {
                 const SizedBox(width: 10),
                 Text(
                   widget.displayName ?? '',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
                 ),
               ],
             ),

@@ -1,8 +1,8 @@
-import 'package:chat/controller/chat_controller.dart';
-import 'package:chat/etc/format_time.dart';
+import 'package:chat/controllers/chat_controller.dart';
+import 'package:chat/core/utils/format_time.dart';
 import 'package:chat/models/chat_room_model.dart';
 import 'package:chat/models/user_model.dart';
-import 'package:chat/pages/detail_chat.dart';
+import 'package:chat/features/chat/presentation/pages/detail_chat.dart';
 import 'package:chat/pages/friend.dart';
 import 'package:chat/pages/user_profile.dart';
 import 'package:chat/services/local_database.dart';
@@ -17,6 +17,7 @@ class Chat extends StatefulWidget {
   final Map<String, dynamic> user;
 
   @override
+  // ignore: library_private_types_in_public_api
   _ChatState createState() => _ChatState();
 }
 
@@ -90,7 +91,7 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
         return Dialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: colorScheme.background,
+          backgroundColor: colorScheme.surface,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
             child: Column(
@@ -98,6 +99,7 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
               children: [
                 CircleAvatar(
                   radius: 60,
+                  backgroundColor: Colors.white,
                   backgroundImage: (data.recipientPhoto != null &&
                           data.recipientPhoto!.isNotEmpty)
                       ? NetworkImage(data.recipientPhoto!)
@@ -228,6 +230,7 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
                                 alignment: Alignment.bottomRight,
                                 children: [
                                   CircleAvatar(
+                                    backgroundColor: Colors.white,
                                     backgroundImage:
                                         (data.recipientPhoto != null &&
                                                 data.recipientPhoto!.isNotEmpty)
@@ -280,8 +283,9 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
                             horizontalTitleGap: 10,
                             tileColor: chatController.selectedChat
                                     .contains(data.id)
+                                // ignore: deprecated_member_use
                                 ? colorScheme.primaryContainer.withOpacity(0.5)
-                                : colorScheme.background,
+                                : colorScheme.surface,
                             title: Text(
                               data.recipientName,
                               maxLines: 1,
@@ -289,7 +293,7 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: colorScheme.onBackground),
+                                  color: colorScheme.onSurface),
                             ),
                             subtitle: StreamBuilder(
                                 stream: StatusService().getUserTypingStatus(
@@ -313,6 +317,7 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
                                                         ? Icons.photo
                                                         : Icons.folder,
                                                     color: colorScheme.onSurface
+                                                        // ignore: deprecated_member_use
                                                         .withOpacity(0.6),
                                                   )
                                                 ],
@@ -345,6 +350,7 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
                                                         ? Icons.photo
                                                         : Icons.folder,
                                                     color: colorScheme.onSurface
+                                                        // ignore: deprecated_member_use
                                                         .withOpacity(0.6),
                                                   )
                                                 ],
@@ -408,8 +414,8 @@ class _ProfileDialogAction extends StatelessWidget {
         children: [
           CircleAvatar(
             backgroundColor: Colors.blue.shade50,
-            child: Icon(icon, color: Colors.blue, size: 28),
             radius: 28,
+            child: Icon(icon, color: Colors.blue, size: 28),
           ),
           const SizedBox(height: 6),
           Text(label, style: const TextStyle(fontSize: 13)),

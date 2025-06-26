@@ -1,4 +1,4 @@
-import 'package:chat/etc/crypto.dart';
+import 'package:chat/core/utils/crypto.dart';
 import 'package:chat/services/api_service.dart';
 import 'package:chat/services/cookie.dart';
 import 'package:chat/services/user_service.dart';

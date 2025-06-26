@@ -1,14 +1,14 @@
 import 'package:chat/components/popup.dart';
-import 'package:chat/pages/auth/auth.dart';
-import 'package:chat/pages/chat_page.dart';
+import 'package:chat/features/auth/presentation/pages/auth.dart';
+import 'package:chat/features/chat/presentation/pages/chat_page.dart';
 import 'package:chat/pages/data_usage_page.dart';
-import 'package:chat/pages/help_page.dart';
-import 'package:chat/pages/notification_page.dart';
-import 'package:chat/pages/personalization_page.dart';
-import 'package:chat/pages/privacy_page.dart';
+import 'package:chat/features/settings/presentation/pages/help_page.dart';
+import 'package:chat/features/settings/presentation/pages/notification_page.dart';
+import 'package:chat/features/settings/presentation/pages/personalization_page.dart';
+import 'package:chat/features/settings/presentation/pages/privacy_page.dart';
 import 'package:chat/pages/profile.dart';
-import 'package:chat/pages/reset_page.dart';
-import 'package:chat/pages/security_page.dart';
+import 'package:chat/features/settings/presentation/pages/reset_page.dart';
+import 'package:chat/features/settings/presentation/pages/security_page.dart';
 import 'package:chat/services/local_database.dart';
 import 'package:chat/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -137,6 +137,7 @@ class _SettingState extends State<Setting> {
                               alignment: Alignment.bottomRight,
                               children: [
                                 CircleAvatar(
+                                  backgroundColor: Colors.white,
                                   backgroundImage:
                                       widget.user['profile_picture'] != null
                                           ? NetworkImage(

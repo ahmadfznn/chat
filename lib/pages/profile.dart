@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:chat/controller/user_controller.dart';
+import 'package:chat/controllers/user_controller.dart';
 import 'package:chat/services/local_database.dart';
 import 'package:chat/services/user_service.dart';
 import 'package:flutter/cupertino.dart';

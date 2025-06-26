@@ -1,17 +1,17 @@
-import 'package:chat/controller/register_controller.dart';
+import 'package:chat/controllers/register_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class Name extends StatefulWidget {
-  const Name({super.key});
+class ProfilePicture extends StatefulWidget {
+  const ProfilePicture({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
-  _NameState createState() => _NameState();
+  _ProfilePictureState createState() => _ProfilePictureState();
 }
 
-class _NameState extends State<Name> {
+class _ProfilePictureState extends State<ProfilePicture> {
   final RegisterController controller = Get.put(RegisterController());
 
   void next() {
@@ -34,28 +34,6 @@ class _NameState extends State<Name> {
         CupertinoTextField(
           controller: controller.firstNameController,
           placeholder: "Input your first name",
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-          autofocus: true,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-        const SizedBox(
-          height: 10,
-        ),
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Text("Last Name", style: TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-        const SizedBox(
-          height: 5,
-        ),
-        CupertinoTextField(
-          controller: controller.lastNameController,
-          placeholder: "Input your last name",
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
           autofocus: true,
           decoration: BoxDecoration(

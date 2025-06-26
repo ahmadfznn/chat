@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:chat/controller/chat_controller.dart';
+import 'package:chat/controllers/chat_controller.dart';
 import 'package:chat/models/chat_room_model.dart';
 import 'package:chat/services/local_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
