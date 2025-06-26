@@ -3,7 +3,7 @@ import 'package:chat/controllers/call_controller.dart';
 import 'package:chat/controllers/chat_controller.dart';
 import 'package:chat/controllers/route_controller.dart';
 import 'package:chat/controllers/story_controller.dart';
-import 'package:chat/pages/call.dart';
+import 'package:chat/features/call/presentation/pages/call.dart';
 import 'package:chat/features/chat/presentation/pages/chat.dart';
 import 'package:chat/features/settings/presentation/pages/setting.dart';
 import 'package:chat/pages/story.dart';

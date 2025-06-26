@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:chat/models/user_model.dart';
-import 'package:chat/pages/call_screen.dart';
+import 'package:chat/features/call/presentation/pages/call_screen.dart';
 import 'package:chat/features/chat/presentation/pages/detail_chat.dart';
 import 'package:chat/services/agora_service.dart';
 import 'package:chat/services/room_service.dart';
