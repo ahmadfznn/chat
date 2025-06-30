@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 import 'package:chat/models/message_model.dart';
 import 'package:chat/services/local_database.dart';
 import 'package:chat/services/media_storage.dart';
@@ -9,7 +12,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 class MessageService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final LocalDatabase _messageDatabase = LocalDatabase.instance;
-  final StreamController<List<MessageModel>> _messagesController = StreamController.broadcast();
+  final StreamController<List<MessageModel>> _messagesController =
+      StreamController.broadcast();
   StreamSubscription? _connectivitySubscription;
   StreamSubscription<QuerySnapshot>? _firestoreSubscription;
   bool _isOnline = true;
@@ -24,7 +28,8 @@ class MessageService {
 
   /// Monitor connectivity and sync messages when online.
   void _monitorConnectivity(String chatRoomId, String userId) {
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((result) async {
+    _connectivitySubscription =
+        Connectivity().onConnectivityChanged.listen((result) async {
       bool isNowOnline = (result != ConnectivityResult.none);
       if (isNowOnline != _isOnline) {
         _isOnline = isNowOnline;
@@ -70,9 +75,11 @@ class MessageService {
           String? localImagePath;
           String? localThumbnailPath;
           if (d['type'] != 'text') {
-            localImagePath = await MediaStorage.downloadMedia(d['message'], doc.id);
+            localImagePath =
+                await MediaStorage.downloadMedia(d['message'], doc.id);
           }
-          MessageModel? localMessage = await _messageDatabase.getMessageById(doc.id);
+          MessageModel? localMessage =
+              await _messageDatabase.getMessageById(doc.id);
           if (localMessage != null) {
             localThumbnailPath = localMessage.thumbnailPath;
           }
@@ -112,7 +119,8 @@ class MessageService {
 
   /// Fetch messages from local SQLite database.
   void _fetchFromSQLite(String chatRoomId) async {
-    List<MessageModel> messages = await _messageDatabase.getMessages(chatRoomId);
+    List<MessageModel> messages =
+        await _messageDatabase.getMessages(chatRoomId);
     _messages = messages;
     _messagesController.add(messages);
   }
@@ -130,7 +138,8 @@ class MessageService {
 
   /// Sync pending (unsent) messages to Firestore.
   Future<void> _syncPendingMessages(String chatRoomId) async {
-    List<MessageModel> pendingMessages = await _messageDatabase.getPendingMessages(chatRoomId);
+    List<MessageModel> pendingMessages =
+        await _messageDatabase.getPendingMessages(chatRoomId);
     for (var message in pendingMessages) {
       try {
         DocumentReference ref = await _firestore
@@ -221,7 +230,8 @@ class MessageService {
   }
 
   /// Delete messages for the current user ("delete for me").
-  Future<bool> deleteChat(String roomId, List<String> messageIds, String userId) async {
+  Future<bool> deleteChat(
+      String roomId, List<String> messageIds, String userId) async {
     try {
       if (roomId.isEmpty) return false;
       if (_isOnline) {
@@ -298,7 +308,9 @@ class MessageService {
   /// Helper: Delete file from Firebase Storage if message is image, video, or file.
   Future<void> _deleteFileIfNeeded(Map<String, dynamic> data) async {
     if (data.containsKey('type') &&
-        (data['type'] == "image" || data['type'] == "video" || data['type'] == "file")) {
+        (data['type'] == "image" ||
+            data['type'] == "video" ||
+            data['type'] == "file")) {
       try {
         String fileUrl = data['message'];
         Reference storageRef = FirebaseStorage.instance.refFromURL(fileUrl);
@@ -320,8 +332,8 @@ class MessageService {
     var isDeletedDoc = remainingMessages.docs
         .map((e) => e.data() as Map<String, dynamic>)
         .toList();
-    var isDeleted = isDeletedDoc.every((e) =>
-        (e['deleted_by'] is List) && (e['deleted_by'].contains(userId)));
+    var isDeleted = isDeletedDoc.every(
+        (e) => (e['deleted_by'] is List) && (e['deleted_by'].contains(userId)));
     if (isDeleted) {
       await _firestore.collection('chatRoom').doc(roomId).update({
         'lastMessage': '',
@@ -336,7 +348,8 @@ class MessageService {
         'lastMessage': lastMessageData['message'] ?? '',
         'type': lastMessageData['type'] ?? 'text',
         'status': lastMessageData['status'] ?? 1,
-        'updated_at': lastMessageData['timestamp'] ?? FieldValue.serverTimestamp(),
+        'updated_at':
+            lastMessageData['timestamp'] ?? FieldValue.serverTimestamp(),
       });
     }
   }
@@ -346,5 +359,75 @@ class MessageService {
     _firestoreSubscription?.cancel();
     _messagesController.close();
     _connectivitySubscription?.cancel();
+  }
+
+  /// Send a message to local Ollama Llama3.1-8b endpoint and save both user and AI messages to local database
+  Future<String?> sendMessageToAiChat(String message, String userId) async {
+    try {
+      // 1. Save user message to local database
+      final userMessage = MessageModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        roomId: 'ai_chat',
+        senderId: userId,
+        receiverId: 'ai',
+        message: message,
+        type: 'text',
+        thumbnailPath: null,
+        localPath: null,
+        timestamp: DateTime.now(),
+        status: 1,
+      );
+      await _messageDatabase.upsertAiMessage(userMessage);
+      _messages.add(userMessage);
+      _messagesController.add(List.from(_messages));
+
+      // 2. Send to Ollama endpoint
+      final uri = Uri.parse('http://localhost:11434/api/chat');
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'model': 'llama3.1',
+          'messages': [
+            {
+              'role': 'user',
+              'content': message,
+            }
+          ],
+        }),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        String? aiContent;
+        if (data is Map && data.containsKey('message')) {
+          aiContent = data['message']['content'] as String?;
+        } else if (data is Map && data.containsKey('content')) {
+          aiContent = data['content'] as String?;
+        }
+        if (aiContent != null) {
+          // 3. Save AI response to local database
+          final aiMessage = MessageModel(
+            id: (DateTime.now().millisecondsSinceEpoch + 1).toString(),
+            roomId: 'ai_chat',
+            senderId: 'ai',
+            receiverId: userId,
+            message: aiContent,
+            type: 'text',
+            thumbnailPath: null,
+            localPath: null,
+            timestamp: DateTime.now(),
+            status: 1,
+          );
+          await _messageDatabase.upsertAiMessage(aiMessage);
+          _messages.add(aiMessage);
+          _messagesController.add(List.from(_messages));
+        }
+        return aiContent;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      return null;
+    }
   }
 }

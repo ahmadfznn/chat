@@ -26,14 +26,13 @@ import 'package:rxdart/rxdart.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
-class DetailChat extends StatefulWidget {
-  const DetailChat({super.key, required this.data, required this.user});
-  final ChatRoomModel data;
+class AiChat extends StatefulWidget {
+  const AiChat({super.key, required this.user});
   final Map<String, dynamic> user;
 
   @override
   // ignore: library_private_types_in_public_api
-  _DetailChatState createState() => _DetailChatState();
+  _AiChatState createState() => _AiChatState();
 }
 
 Route openImage(Widget page) {
@@ -79,7 +78,7 @@ Route _goPage(Widget page) {
   );
 }
 
-class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
+class _AiChatState extends State<AiChat> with WidgetsBindingObserver {
   final StatusService _statusService = StatusService();
   TextEditingController inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -99,8 +98,8 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
     super.initState();
     routeController.currentRoute.value = "/detailChat";
 
-    messageService = MessageService(widget.data.id, widget.user['id']);
-    messageService.fetchMessages(widget.data.id, widget.user['id']);
+    messageService = MessageService("ai_chat", widget.user['id']);
+    messageService.fetchMessages("ai_chat", widget.user['id']);
     WidgetsBinding.instance.addObserver(this);
     _focusNode.addListener(() {
       if (_focusNode.hasFocus) {
@@ -230,7 +229,7 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
   void onTyping() {
     if (!_isTyping) {
       _isTyping = true;
-      _statusService.setTypingStatus(widget.data.id, true);
+      _statusService.setTypingStatus("ai_chat", true);
     }
 
     Future.delayed(Duration(seconds: 3), () {
@@ -239,17 +238,13 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
   }
 
   void sendMessage() async {
-    final res = await messageService.sendMessage({
-      "roomId": widget.data.id,
-      "userId": widget.user['id'],
-      "receiverId": widget.data.recipientId,
-      "message": inputController.text.trim(),
-      "type": "text"
-    });
+    final res = await messageService.sendMessageToAiChat(
+      inputController.text.trim(),
+      widget.user['id'],
+    );
 
-    if (res) {
+    if (res != null) {
       inputController.clear();
-      _scrollToBottom();
     }
   }
 
@@ -320,9 +315,9 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
 
     MessageModel tempMessage = MessageModel(
       id: fileName,
-      roomId: widget.data.id,
+      roomId: "ai_chat",
       senderId: widget.user['id'],
-      receiverId: widget.data.recipientId,
+      receiverId: "ai_chat",
       message: "",
       type: fileType,
       localPath: filePath,
@@ -339,9 +334,9 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
 
     await messageService.sendMessage({
       "id": fileName,
-      "roomId": widget.data.id,
+      "roomId": "ai_chat",
       "userId": widget.user['id'],
-      "receiverId": widget.data.recipientId,
+      "receiverId": "ai_chat",
       "message": fileUrl,
       "type": fileType,
       "localPath": filePath,
@@ -373,7 +368,7 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
 
   void deleteChat() async {
     final res = await messageService.deleteChat(
-        widget.data.id, selectedChat, widget.user['id']);
+        "ai_chat", selectedChat, widget.user['id']);
     if (res) {
       setState(() {
         selectedChat.clear();
@@ -541,32 +536,28 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
         titleSpacing: 0,
         title: GestureDetector(
           onTap: () {
-            _navigateToUserProfile(context, widget.data.recipientId);
+            _navigateToUserProfile(context, "ai_chat");
           },
           child: Row(
             children: [
               CircleAvatar(
                 backgroundColor: Colors.white,
-                backgroundImage: widget.data.recipientPhoto != null &&
-                        widget.data.recipientPhoto!.isNotEmpty
-                    ? NetworkImage(widget.data.recipientPhoto!)
-                    : AssetImage("assets/img/user.png"),
+                backgroundImage: AssetImage("assets/img/user.png"),
               ),
               SizedBox(width: 10),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.data.recipientName,
+                  Text("AI Chat",
                       style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           color: Colors.black)),
                   StreamBuilder<Map<String, dynamic>>(
                       stream: combineStreams(
+                        StatusService().getUserOnlineStatus("ai_chat"),
                         StatusService()
-                            .getUserOnlineStatus(widget.data.recipientId),
-                        StatusService().getUserTypingStatus(
-                            widget.data.id, widget.data.recipientId),
+                            .getUserTypingStatus("ai_chat", "ai_chat"),
                       ),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) {
@@ -577,12 +568,7 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
                         bool isTyping = snapshot.data!['typing'] ?? false;
                         dynamic lastSeen = snapshot.data!['lastSeen'];
 
-                        return Text(
-                            isTyping
-                                ? "Typing..."
-                                : isOnline
-                                    ? "Online"
-                                    : "Last seen ${formatTimeTo24Hour(lastSeen)}",
+                        return Text(isTyping ? "Typing..." : "",
                             style:
                                 TextStyle(color: Colors.green, fontSize: 12));
                       }),
@@ -636,12 +622,6 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
               ]
             : [
                 IconButton(
-                    icon: Icon(Icons.phone, color: Colors.blue),
-                    onPressed: () {}),
-                IconButton(
-                    icon: Icon(Icons.video_call, color: Colors.blue),
-                    onPressed: () {}),
-                IconButton(
                     icon: Icon(Icons.menu, color: Colors.grey),
                     onPressed: () {
                       _showOverlay(context);
@@ -658,12 +638,12 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
                     !snapshot.hasData) {
                   return Center(child: CircularProgressIndicator());
                 }
+                var messages = snapshot.data!;
 
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  print("Jumlah Pesan : ${messages.length}");
                   return Center(child: Text("Belum ada pesan"));
                 }
-
-                var messages = snapshot.data!;
 
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (_scrollController.hasClients) {
@@ -900,176 +880,6 @@ Widget _buildMessage(BuildContext context, MessageModel message, bool isMe,
                 )
               : Container()
         ],
-      ),
-    );
-  } else if (message.type == "image") {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          openImage(
-            FullScreenImageViewer(
-                imageUrl: message.localPath ?? message.message),
-          ),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 2),
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: isMe ? Colors.blue : Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: isMe
-                ? const Radius.circular(10)
-                : isFirst
-                    ? const Radius.circular(10)
-                    : Radius.zero,
-            topRight: isMe
-                ? isFirst
-                    ? const Radius.circular(10)
-                    : Radius.zero
-                : const Radius.circular(10),
-            bottomLeft: isMe
-                ? const Radius.circular(10)
-                : isLast
-                    ? const Radius.circular(10)
-                    : Radius.zero,
-            bottomRight: isMe
-                ? isLast
-                    ? const Radius.circular(10)
-                    : Radius.zero
-                : const Radius.circular(10),
-          ),
-          boxShadow: [
-            BoxShadow(color: Colors.black12, spreadRadius: 1, blurRadius: 3),
-          ],
-        ),
-        child: Stack(
-          children: [
-            message.localPath != null && File(message.localPath!).existsSync()
-                ? Opacity(
-                    opacity: message.status == 0 ? 0.5 : 1,
-                    child: Image.file(
-                      File(message.localPath!),
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : Image.network(
-                    message.message,
-                    fit: BoxFit.cover,
-                  ),
-            message.status == 0
-                ? Positioned(
-                    bottom: 5,
-                    right: 5,
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                      ),
-                    ),
-                  )
-                : Positioned(
-                    bottom: 5,
-                    right: 5,
-                    child: Text(
-                      "${message.timestamp.hour.toString().padLeft(2, '0')}.${message.timestamp.minute.toString().padLeft(2, '0')}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-          ],
-        ),
-      ),
-    );
-  } else if (message.type == "video") {
-    return GestureDetector(
-      onTap: () {
-        // Navigator.push(
-        //   context,
-        //   openImage(
-        //     FullScreenImageViewer(
-        //         imageUrl: message.localPath ?? message.message),
-        //   ),
-        // );
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 2),
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: isMe ? Colors.blue : Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: isMe
-                ? const Radius.circular(10)
-                : isFirst
-                    ? const Radius.circular(10)
-                    : Radius.zero,
-            topRight: isMe
-                ? isFirst
-                    ? const Radius.circular(10)
-                    : Radius.zero
-                : const Radius.circular(10),
-            bottomLeft: isMe
-                ? const Radius.circular(10)
-                : isLast
-                    ? const Radius.circular(10)
-                    : Radius.zero,
-            bottomRight: isMe
-                ? isLast
-                    ? const Radius.circular(10)
-                    : Radius.zero
-                : const Radius.circular(10),
-          ),
-          boxShadow: [
-            BoxShadow(color: Colors.black12, spreadRadius: 1, blurRadius: 3),
-          ],
-        ),
-        child: Stack(
-          children: [
-            message.thumbnailPath != null
-                ? Opacity(
-                    opacity: message.status == 0 ? 0.5 : 1,
-                    child: Image.file(
-                      File(message.thumbnailPath!),
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : VideoPlayer(
-                    videoUrl: message.localPath != null
-                        ? message.localPath!
-                        : message.message),
-            message.status == 0
-                ? Positioned(
-                    bottom: 5,
-                    right: 5,
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                      ),
-                    ),
-                  )
-                : Positioned(
-                    bottom: 5,
-                    right: 5,
-                    child: Text(
-                      "${message.timestamp.hour.toString().padLeft(2, '0')}.${message.timestamp.minute.toString().padLeft(2, '0')}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-          ],
-        ),
       ),
     );
   } else {

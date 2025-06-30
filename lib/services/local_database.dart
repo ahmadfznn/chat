@@ -242,6 +242,20 @@ class LocalDatabase {
     );
   }
 
+  /// Insert or update an AI chat message for offline storage.
+  Future<void> upsertAiMessage(MessageModel message) async {
+    final db = await database;
+    // Ensure the message has the AI chat room ID for offline storage
+    final messageMap = message.toMap();
+    messageMap['roomId'] = 'ai_chat';
+
+    await db.insert(
+      chatTable,
+      messageMap,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
   /// Update a message's status.
   Future<void> updateMessageStatus(String messageId, int newStatus) async {
     final db = await database;
@@ -283,6 +297,27 @@ class LocalDatabase {
       whereArgs: [chatRoomId, 0],
     );
     return maps.map((map) => MessageModel.fromMap(map)).toList();
+  }
+
+  /// Get all messages for a ai chat
+  Future<List<MessageModel>> getAiChatMessages() async {
+    final db = await database;
+    final maps =
+        await db.query(chatTable, where: 'roomId = ?', whereArgs: ['ai_chat']);
+    return maps.map((map) => MessageModel.fromMap(map)).toList();
+  }
+
+  /// Get a message by its ID for ai chat
+  Future<MessageModel?> getAiChatMessageById(String id) async {
+    final db = await database;
+    final maps = await db.query(chatTable, where: 'id = ?', whereArgs: [id]);
+    return maps.isNotEmpty ? MessageModel.fromMap(maps.first) : null;
+  }
+
+  /// Delete an AI chat message by its ID
+  Future<void> deleteAiChatMessageById(String id) async {
+    final db = await database;
+    await db.delete(chatTable, where: 'id = ?', whereArgs: [id]);
   }
 
   /// Get all users except the given username.
@@ -330,7 +365,8 @@ class LocalDatabase {
   /// Get notification settings (returns JSON string or null).
   Future<String?> getNotificationSettings() async {
     final db = await database;
-    final maps = await db.query(notificationSettingsTable, where: 'id = ?', whereArgs: [1]);
+    final maps = await db
+        .query(notificationSettingsTable, where: 'id = ?', whereArgs: [1]);
     if (maps.isNotEmpty) {
       return maps.first['settings'] as String;
     }
@@ -350,7 +386,8 @@ class LocalDatabase {
   /// Get privacy settings (returns JSON string or null).
   Future<String?> getPrivacySettings() async {
     final db = await database;
-    final maps = await db.query(privacySettingsTable, where: 'id = ?', whereArgs: [1]);
+    final maps =
+        await db.query(privacySettingsTable, where: 'id = ?', whereArgs: [1]);
     if (maps.isNotEmpty) {
       return maps.first['settings'] as String;
     }
@@ -393,7 +430,8 @@ class LocalDatabase {
   /// Get chat settings (returns JSON string or null).
   Future<String?> getChatSettings() async {
     final db = await database;
-    final maps = await db.query(chatSettingsTable, where: 'id = ?', whereArgs: [1]);
+    final maps =
+        await db.query(chatSettingsTable, where: 'id = ?', whereArgs: [1]);
     if (maps.isNotEmpty) {
       return maps.first['settings'] as String;
     }
@@ -401,7 +439,8 @@ class LocalDatabase {
   }
 
   /// Save or update chat preferences for a specific chat (as JSON string).
-  Future<void> upsertChatPreferences(String chatId, String preferencesJson) async {
+  Future<void> upsertChatPreferences(
+      String chatId, String preferencesJson) async {
     final db = await database;
     await db.insert(
       chatPreferencesTable,
@@ -413,7 +452,8 @@ class LocalDatabase {
   /// Get chat preferences for a specific chat (returns JSON string or null).
   Future<String?> getChatPreferences(String chatId) async {
     final db = await database;
-    final maps = await db.query(chatPreferencesTable, where: 'chatId = ?', whereArgs: [chatId]);
+    final maps = await db
+        .query(chatPreferencesTable, where: 'chatId = ?', whereArgs: [chatId]);
     if (maps.isNotEmpty) {
       return maps.first['preferences'] as String;
     }

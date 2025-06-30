@@ -1,6 +1,9 @@
 import 'package:chat/controllers/chat_controller.dart';
 import 'package:chat/core/utils/format_time.dart';
+import 'package:chat/features/chat/data/datasources/message_service.dart';
+import 'package:chat/features/chat/presentation/pages/ai_chat.dart';
 import 'package:chat/models/chat_room_model.dart';
+import 'package:chat/models/message_model.dart';
 import 'package:chat/models/user_model.dart';
 import 'package:chat/features/chat/presentation/pages/detail_chat.dart';
 import 'package:chat/pages/friend.dart';
@@ -44,12 +47,15 @@ Route _goPage(Widget page) {
 class _ChatState extends State<Chat> with WidgetsBindingObserver {
   final ChatController chatController = Get.find();
   late RoomService _roomService;
+  late MessageService _messageService;
 
   @override
   void initState() {
     super.initState();
     _roomService = RoomService(widget.user["id"]);
     _roomService.fetchChatRooms(widget.user["id"]);
+    _messageService = MessageService("ai_chat", widget.user["id"]);
+    _messageService.fetchMessages("ai_chat", widget.user["id"]);
   }
 
   @override
@@ -190,206 +196,287 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
               color: const Color(0xFF2FBEFF),
               child: filteredRooms.isEmpty
                   ? const Center(child: Text("No chats found"))
-                  : ListView.builder(
-                      itemCount: filteredRooms.length,
-                      itemBuilder: (context, index) {
-                        var data = filteredRooms[index];
-                        void handleLongPress() {
-                          if (!chatController.showSelect.value) {
-                            chatController.showSelect.value = true;
-                            chatController.selectedChat.add(data.id);
-                          }
-                        }
-
-                        void handleTap() {
-                          if (chatController.selectedChat.contains(data.id)) {
-                            chatController.selectedChat.remove(data.id);
-                            if (chatController.selectedChat.isEmpty) {
-                              chatController.showSelect.value = false;
+                  : Column(
+                      children: [
+                        // Fixed: Use a defined service for messages, using a local MessageService instance
+                        StreamBuilder<List<MessageModel>>(
+                          stream: _messageService.messagesStream,
+                          builder: (context, snapshot) {
+                            String subtitleText = "No messages yet";
+                            if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                              final lastMessage = snapshot.data!.last;
+                              if (lastMessage.type == "text") {
+                                subtitleText = lastMessage.message;
+                              } else if (lastMessage.type == "image") {
+                                subtitleText = "[Image]";
+                              } else if (lastMessage.type == "video") {
+                                subtitleText = "[Video]";
+                              } else if (lastMessage.type == "file") {
+                                subtitleText = "[File]";
+                              } else {
+                                subtitleText = "[${lastMessage.type}]";
+                              }
                             }
-                          } else if (chatController.showSelect.value) {
-                            chatController.selectedChat.add(data.id);
-                          } else {
-                            Navigator.push(
-                                context,
-                                _goPage(
-                                    DetailChat(data: data, user: widget.user)));
-                          }
-                        }
-
-                        return Obx(() {
-                          return ListTile(
-                            key: ValueKey(data.id),
-                            contentPadding: const EdgeInsets.symmetric(
-                                vertical: 7, horizontal: 10),
-                            leading: GestureDetector(
+                            return ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 7, horizontal: 10),
+                              leading: GestureDetector(
+                                onTap: () {},
+                                child: Stack(
+                                  alignment: Alignment.bottomRight,
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: Colors.white,
+                                      backgroundImage: const AssetImage(
+                                          "assets/img/user.png"),
+                                      radius: 25,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              horizontalTitleGap: 10,
+                              title: Text(
+                                "AI Chat",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: colorScheme.onSurface),
+                              ),
+                              subtitle: Text(
+                                subtitleText,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    color:
+                                        colorScheme.onSurface.withOpacity(0.7)),
+                              ),
+                              onLongPress: () {},
                               onTap: () {
-                                _showProfileDialog(context, data);
+                                Navigator.push(
+                                  context,
+                                  _goPage(AiChat(user: widget.user)),
+                                );
                               },
-                              child: Stack(
-                                alignment: Alignment.bottomRight,
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: Colors.white,
-                                    backgroundImage:
-                                        (data.recipientPhoto != null &&
+                            );
+                          },
+                        ),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: filteredRooms.length,
+                          itemBuilder: (context, index) {
+                            var data = filteredRooms[index];
+                            void handleLongPress() {
+                              if (!chatController.showSelect.value) {
+                                chatController.showSelect.value = true;
+                                chatController.selectedChat.add(data.id);
+                              }
+                            }
+
+                            void handleTap() {
+                              if (chatController.selectedChat
+                                  .contains(data.id)) {
+                                chatController.selectedChat.remove(data.id);
+                                if (chatController.selectedChat.isEmpty) {
+                                  chatController.showSelect.value = false;
+                                }
+                              } else if (chatController.showSelect.value) {
+                                chatController.selectedChat.add(data.id);
+                              } else {
+                                Navigator.push(
+                                    context,
+                                    _goPage(DetailChat(
+                                        data: data, user: widget.user)));
+                              }
+                            }
+
+                            return Obx(() {
+                              return ListTile(
+                                key: ValueKey(data.id),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 7, horizontal: 10),
+                                leading: GestureDetector(
+                                  onTap: () {
+                                    _showProfileDialog(context, data);
+                                  },
+                                  child: Stack(
+                                    alignment: Alignment.bottomRight,
+                                    children: [
+                                      CircleAvatar(
+                                        backgroundColor: Colors.white,
+                                        backgroundImage: (data.recipientPhoto !=
+                                                    null &&
                                                 data.recipientPhoto!.isNotEmpty)
                                             ? NetworkImage(data.recipientPhoto!)
                                             : const AssetImage(
                                                 "assets/img/user.png"),
-                                    radius: 25,
-                                  ),
-                                  StreamBuilder<Map<String, dynamic>>(
-                                      stream: StatusService()
-                                          .getUserOnlineStatus(
-                                              data.recipientId),
-                                      builder: (context, snapshot) {
-                                        if (!snapshot.hasData) {
-                                          return Positioned(
-                                            bottom: 2,
-                                            right: 2,
-                                            child: Container(),
-                                          );
-                                        }
-                                        bool isOnline =
-                                            snapshot.data!['status'] ?? false;
-                                        if (isOnline) {
-                                          return Positioned(
-                                            bottom: 2,
-                                            right: 2,
-                                            child: Container(
-                                              width: 14,
-                                              height: 14,
-                                              decoration: BoxDecoration(
-                                                  color: Colors.green,
-                                                  border: Border.all(
-                                                      color: Colors.white,
-                                                      width: 1),
-                                                  borderRadius:
-                                                      BorderRadius.circular(7)),
-                                            ),
-                                          );
-                                        } else {
-                                          return Positioned(
-                                            bottom: 2,
-                                            right: 2,
-                                            child: Container(),
-                                          );
-                                        }
-                                      })
-                                ],
-                              ),
-                            ),
-                            horizontalTitleGap: 10,
-                            tileColor: chatController.selectedChat
-                                    .contains(data.id)
-                                // ignore: deprecated_member_use
-                                ? colorScheme.primaryContainer.withOpacity(0.5)
-                                : colorScheme.surface,
-                            title: Text(
-                              data.recipientName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: colorScheme.onSurface),
-                            ),
-                            subtitle: StreamBuilder(
-                                stream: StatusService().getUserTypingStatus(
-                                    data.id, data.recipientId),
-                                builder: (context, snapshot) {
-                                  if (!snapshot.hasData) {
-                                    return data.type == 'text'
-                                        ? Text(
-                                            data.lastMessage ?? '',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                                fontSize: 14,
-                                                color: colorScheme.onSurface),
-                                          )
-                                        : data.type!.isNotEmpty
-                                            ? Row(
-                                                children: [
-                                                  Icon(
-                                                    data.type != 'file'
-                                                        ? Icons.photo
-                                                        : Icons.folder,
-                                                    color: colorScheme.onSurface
-                                                        // ignore: deprecated_member_use
-                                                        .withOpacity(0.6),
-                                                  )
-                                                ],
-                                              )
-                                            : Container();
-                                  }
-                                  bool isTyping =
-                                      snapshot.data!['status'] ?? false;
-                                  if (isTyping) {
-                                    return Text(
-                                      'Typing...',
-                                      style: TextStyle(
-                                          color: Colors.green, fontSize: 14),
-                                    );
-                                  } else {
-                                    return data.type == 'text'
-                                        ? Text(
-                                            data.lastMessage ?? '',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                                fontSize: 14,
-                                                color: colorScheme.onSurface),
-                                          )
-                                        : data.type!.isNotEmpty
-                                            ? Row(
-                                                children: [
-                                                  Icon(
-                                                    data.type != 'file'
-                                                        ? Icons.photo
-                                                        : Icons.folder,
-                                                    color: colorScheme.onSurface
-                                                        // ignore: deprecated_member_use
-                                                        .withOpacity(0.6),
-                                                  )
-                                                ],
-                                              )
-                                            : Container();
-                                  }
-                                }),
-                            trailing: data.status == 2 && data.unread != 0
-                                ? SizedBox(
-                                    width: 30,
-                                    height: 30,
-                                    child: FilledButton(
-                                      style: ButtonStyle(
-                                        backgroundColor: WidgetStatePropertyAll(
-                                            colorScheme.primary),
-                                        shape: WidgetStatePropertyAll(
-                                            RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(50))),
-                                        padding: WidgetStatePropertyAll(
-                                            EdgeInsets.zero),
+                                        radius: 25,
                                       ),
-                                      onPressed: () {},
-                                      child: Text(data.unread.toString()),
-                                    ),
-                                  )
-                                : Text(
-                                    data.status != -1
-                                        ? formatTimeTo24Hour(data.updatedAt)
-                                        : '',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        color: colorScheme.onSurface),
+                                      StreamBuilder<Map<String, dynamic>>(
+                                          stream: StatusService()
+                                              .getUserOnlineStatus(
+                                                  data.recipientId),
+                                          builder: (context, snapshot) {
+                                            if (!snapshot.hasData) {
+                                              return Positioned(
+                                                bottom: 2,
+                                                right: 2,
+                                                child: Container(),
+                                              );
+                                            }
+                                            bool isOnline =
+                                                snapshot.data!['status'] ??
+                                                    false;
+                                            if (isOnline) {
+                                              return Positioned(
+                                                bottom: 2,
+                                                right: 2,
+                                                child: Container(
+                                                  width: 14,
+                                                  height: 14,
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.green,
+                                                      border: Border.all(
+                                                          color: Colors.white,
+                                                          width: 1),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              7)),
+                                                ),
+                                              );
+                                            } else {
+                                              return Positioned(
+                                                bottom: 2,
+                                                right: 2,
+                                                child: Container(),
+                                              );
+                                            }
+                                          })
+                                    ],
                                   ),
-                            onLongPress: handleLongPress,
-                            onTap: handleTap,
-                          );
-                        });
-                      },
+                                ),
+                                horizontalTitleGap: 10,
+                                tileColor: chatController.selectedChat
+                                        .contains(data.id)
+                                    // ignore: deprecated_member_use
+                                    ? colorScheme.primaryContainer
+                                        .withOpacity(0.5)
+                                    : colorScheme.surface,
+                                title: Text(
+                                  data.recipientName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: colorScheme.onSurface),
+                                ),
+                                subtitle: StreamBuilder(
+                                    stream: StatusService().getUserTypingStatus(
+                                        data.id, data.recipientId),
+                                    builder: (context, snapshot) {
+                                      if (!snapshot.hasData) {
+                                        return data.type == 'text'
+                                            ? Text(
+                                                data.lastMessage ?? '',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                    fontSize: 14,
+                                                    color:
+                                                        colorScheme.onSurface),
+                                              )
+                                            : data.type!.isNotEmpty
+                                                ? Row(
+                                                    children: [
+                                                      Icon(
+                                                        data.type != 'file'
+                                                            ? Icons.photo
+                                                            : Icons.folder,
+                                                        color: colorScheme
+                                                            .onSurface
+                                                            // ignore: deprecated_member_use
+                                                            .withOpacity(0.6),
+                                                      )
+                                                    ],
+                                                  )
+                                                : Container();
+                                      }
+                                      bool isTyping =
+                                          snapshot.data!['status'] ?? false;
+                                      if (isTyping) {
+                                        return Text(
+                                          'Typing...',
+                                          style: TextStyle(
+                                              color: Colors.green,
+                                              fontSize: 14),
+                                        );
+                                      } else {
+                                        return data.type == 'text'
+                                            ? Text(
+                                                data.lastMessage ?? '',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                    fontSize: 14,
+                                                    color:
+                                                        colorScheme.onSurface),
+                                              )
+                                            : data.type!.isNotEmpty
+                                                ? Row(
+                                                    children: [
+                                                      Icon(
+                                                        data.type != 'file'
+                                                            ? Icons.photo
+                                                            : Icons.folder,
+                                                        color: colorScheme
+                                                            .onSurface
+                                                            // ignore: deprecated_member_use
+                                                            .withOpacity(0.6),
+                                                      )
+                                                    ],
+                                                  )
+                                                : Container();
+                                      }
+                                    }),
+                                trailing: data.status == 2 && data.unread != 0
+                                    ? SizedBox(
+                                        width: 30,
+                                        height: 30,
+                                        child: FilledButton(
+                                          style: ButtonStyle(
+                                            backgroundColor:
+                                                WidgetStatePropertyAll(
+                                                    colorScheme.primary),
+                                            shape: WidgetStatePropertyAll(
+                                                RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            50))),
+                                            padding: WidgetStatePropertyAll(
+                                                EdgeInsets.zero),
+                                          ),
+                                          onPressed: () {},
+                                          child: Text(data.unread.toString()),
+                                        ),
+                                      )
+                                    : Text(
+                                        data.status != -1
+                                            ? formatTimeTo24Hour(data.updatedAt)
+                                            : '',
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            color: colorScheme.onSurface),
+                                      ),
+                                onLongPress: handleLongPress,
+                                onTap: handleTap,
+                              );
+                            });
+                          },
+                        )
+                      ],
                     ),
             );
           });
