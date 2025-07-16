@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:chat/components/gradient_text.dart';
 import 'package:chat/controllers/call_controller.dart';
 import 'package:chat/controllers/chat_controller.dart';
@@ -11,6 +13,7 @@ import 'package:chat/services/room_service.dart';
 import 'package:chat/services/user_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
@@ -261,7 +264,7 @@ class _LayoutState extends State<Layout> {
     return Scaffold(
       backgroundColor: colorScheme.background,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(120),
+        preferredSize: const Size.fromHeight(140),
         child: Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.bottomCenter,
@@ -273,7 +276,8 @@ class _LayoutState extends State<Layout> {
                 child: Column(
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       decoration: BoxDecoration(
                           border: Border(
                               bottom: BorderSide(
@@ -291,7 +295,7 @@ class _LayoutState extends State<Layout> {
                             ),
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 24,
+                              fontSize: 32,
                               color: colorScheme.onBackground,
                             ),
                           ),
@@ -425,16 +429,60 @@ class _LayoutState extends State<Layout> {
                                         ],
                                       ),
                                     )
-                                  : IconButton(
-                                      onPressed: () {
-                                        Navigator.push(
-                                            context,
-                                            _goPage(
-                                                Setting(user: widget.user)));
-                                      },
-                                      icon: const Icon(
-                                        IconsaxPlusBold.setting_2,
-                                        color: Colors.blue,
+                                  : Container(
+                                      width: 46,
+                                      height: 46,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: const LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            Color(0xFFF8FAFC),
+                                            Color(0xFFE2E8F0)
+                                          ],
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color:
+                                                Colors.black.withOpacity(0.1),
+                                            blurRadius: 16,
+                                            offset: const Offset(0, 8),
+                                          ),
+                                          BoxShadow(
+                                            color:
+                                                Colors.white.withOpacity(0.8),
+                                            blurRadius: 1,
+                                            offset: const Offset(0, 1),
+                                            spreadRadius: 0,
+                                          ),
+                                          BoxShadow(
+                                            color:
+                                                Colors.black.withOpacity(0.05),
+                                            blurRadius: 1,
+                                            offset: const Offset(0, -1),
+                                            spreadRadius: 0,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          borderRadius:
+                                              BorderRadius.circular(23),
+                                          onTap: () {
+                                            HapticFeedback.lightImpact();
+                                            Navigator.push(
+                                                context,
+                                                _goPage(Setting(
+                                                    user: widget.user)));
+                                          },
+                                          child: const Icon(
+                                            Icons.more_horiz,
+                                            color: Color(0xFF64748B),
+                                            size: 20,
+                                          ),
+                                        ),
                                       ),
                                     );
                             },
@@ -446,24 +494,71 @@ class _LayoutState extends State<Layout> {
                       height: 10,
                     ),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: CupertinoTextField(
-                        controller: searchController,
-                        prefix: const Padding(
-                          padding: EdgeInsets.only(left: 10),
-                          child: Icon(
-                            IconsaxPlusLinear.search_normal_1,
-                            color: Colors.grey,
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        child: Container(
+                          height: 52,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.white.withOpacity(0.7),
+                                const Color(0xFFF8FAFC).withOpacity(0.7),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(26),
+                            border: Border.all(
+                              color: const Color(0xFFE2E8F0).withOpacity(0.3),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 16,
+                                offset: const Offset(0, 8),
+                              ),
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.8),
+                                blurRadius: 1,
+                                offset: const Offset(0, 1),
+                                spreadRadius: 0,
+                              ),
+                            ],
                           ),
-                        ),
-                        placeholder: "Search ${title[_currentIndex]}",
-                        padding: const EdgeInsets.all(15),
-                        decoration: BoxDecoration(
-                          color: Color(0xFFf9fafb),
-                          borderRadius: BorderRadius.circular(50),
-                        ),
-                      ),
-                    ),
+                          child: TextField(
+                            controller: searchController,
+                            autofocus: false,
+                            cursorColor: const Color(0xFF1E293B),
+                            cursorHeight: 20,
+                            cursorWidth: 1.5,
+                            textInputAction: TextInputAction.search,
+                            decoration: InputDecoration(
+                              prefixIcon: Icon(
+                                IconsaxPlusLinear.search_normal_1,
+                                color: Color(0xFF94A3B8),
+                              ),
+                              filled: true,
+                              fillColor: Colors.transparent,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 15),
+                              focusedBorder: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              disabledBorder: InputBorder.none,
+                              hintText: "Search ${title[_currentIndex]}",
+                              hintStyle: TextStyle(
+                                color: Color(0xFF94A3B8),
+                                fontSize: 16,
+                              ),
+                              border: InputBorder.none,
+                            ),
+                            style: const TextStyle(
+                              color: Color(0xFF1E293B),
+                              fontSize: 16,
+                            ),
+                            onChanged: (value) {
+                              // Handle search
+                            },
+                          ),
+                        )),
                   ],
                 ),
               ),
@@ -472,70 +567,90 @@ class _LayoutState extends State<Layout> {
         ),
       ),
       bottomNavigationBar: Container(
-        height: 60,
+        height: 80,
         decoration: BoxDecoration(
-            color: colorScheme.background,
-            border: Border(
-                top: BorderSide(
-              color: colorScheme.outline.withOpacity(0.1),
-            ))),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(3, (index) {
-                return GestureDetector(
-                  onTap: () => _onItemTapped(index),
-                  child: Container(
-                    width: 70,
-                    color: _currentIndex == index
-                        ? colorScheme.primary.withOpacity(0.08)
-                        : colorScheme.background,
-                    child: Stack(
-                      children: [
-                        if (_currentIndex == index)
-                          Positioned(
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              height: 3,
-                              color: colorScheme.primary,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withOpacity(0.95),
+              const Color(0xFFF8FAFC).withOpacity(0.95),
+            ],
+          ),
+          border: Border(
+            top: BorderSide(
+              color: const Color(0xFFE2E8F0).withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+        ),
+        child: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: List.generate(3, (index) {
+                  final isActive = _currentIndex == index;
+                  return GestureDetector(
+                    onTap: () => _onItemTapped(index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: isActive
+                            ? LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  const Color(0xFF3B82F6).withOpacity(0.1),
+                                  const Color(0xFF06B6D4).withOpacity(0.1),
+                                ],
+                              )
+                            : null,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                            child: Icon(
+                              _getIconForIndex(index, _currentIndex),
+                              size: 24,
+                              color: isActive
+                                  ? const Color(0xFF3B82F6)
+                                  : const Color(0xFF94A3B8),
                             ),
                           ),
-                        Center(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                _getIconForIndex(index, _currentIndex),
-                                size: 25,
-                                color: _currentIndex == index
-                                    ? colorScheme.primary
-                                    : colorScheme.onSurface.withOpacity(0.6),
-                              ),
-                              const SizedBox(
-                                height: 3,
-                              ),
-                              Text(
-                                title[index],
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    color:
-                                        colorScheme.onSurface.withOpacity(0.7)),
-                              )
-                            ],
+                          const SizedBox(height: 4),
+                          AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isActive
+                                  ? const Color(0xFF3B82F6)
+                                  : const Color(0xFF94A3B8),
+                            ),
+                            child: Text(title[index]),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                }),
+              ),
             ),
-          ],
+          ),
         ),
       ),
       body: PageView(

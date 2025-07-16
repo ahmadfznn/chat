@@ -527,15 +527,78 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        shape: Border(bottom: BorderSide(color: Colors.grey[200]!)),
-        elevation: 1,
-        leading: IconButton(
-          icon: Icon(Icons.chevron_left, size: 35, color: Colors.grey[600]),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.98),
+                Color(0xFFF8FAFC).withOpacity(0.98),
+              ],
+            ),
+          ),
+          child: ClipRRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Color(0xFFE2E8F0).withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        leading: Container(
+          margin: EdgeInsets.only(left: 16, top: 8, bottom: 8),
+          child: Material(
+            elevation: 0,
+            borderRadius: BorderRadius.circular(22),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withOpacity(0.8),
+                    Color(0xFFF8FAFC).withOpacity(0.8),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 12,
+                    offset: Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.9),
+                    blurRadius: 0,
+                    offset: Offset(0, 1),
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: IconButton(
+                icon: Icon(
+                  Icons.chevron_left,
+                  size: 20,
+                  color: Color(0xFF475569),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                padding: EdgeInsets.zero,
+              ),
+            ),
+          ),
         ),
         leadingWidth: 50,
         titleSpacing: 0,
@@ -545,23 +608,139 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
           },
           child: Row(
             children: [
-              CircleAvatar(
-                backgroundColor: Colors.white,
-                backgroundImage: widget.data.recipientPhoto != null &&
-                        widget.data.recipientPhoto!.isNotEmpty
-                    ? NetworkImage(widget.data.recipientPhoto!)
-                    : AssetImage("assets/img/user.png"),
-              ),
-              SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Stack(
                 children: [
-                  Text(widget.data.recipientName,
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFFEC4899),
+                          Color(0xFFF472B6),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFFEC4899).withOpacity(0.25),
+                          blurRadius: 16,
+                          offset: Offset(0, 6),
+                        ),
+                        BoxShadow(
+                          color: Colors.white.withOpacity(0.3),
+                          blurRadius: 0,
+                          offset: Offset(0, 1),
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: widget.data.recipientPhoto != null &&
+                              widget.data.recipientPhoto!.isNotEmpty
+                          ? Image.network(
+                              widget.data.recipientPhoto!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Color(0xFFEC4899),
+                                        Color(0xFFF472B6),
+                                      ],
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      widget.data.recipientName[0]
+                                          .toUpperCase(),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                          : Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Color(0xFFEC4899),
+                                    Color(0xFFF472B6),
+                                  ],
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  widget.data.recipientName[0].toUpperCase(),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 2,
+                    right: 2,
+                    child: Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(7),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF10B981),
+                            Color(0xFF34D399),
+                          ],
+                        ),
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 3,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFF10B981).withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.data.recipientName,
                       style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black)),
-                  StreamBuilder<Map<String, dynamic>>(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    StreamBuilder<Map<String, dynamic>>(
                       stream: combineStreams(
                         StatusService()
                             .getUserOnlineStatus(widget.data.recipientId),
@@ -578,214 +757,369 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
                         dynamic lastSeen = snapshot.data!['lastSeen'];
 
                         return Text(
-                            isTyping
-                                ? "Typing..."
-                                : isOnline
-                                    ? "Online"
-                                    : "Last seen ${formatTimeTo24Hour(lastSeen)}",
-                            style:
-                                TextStyle(color: Colors.green, fontSize: 12));
-                      }),
-                ],
+                          isTyping
+                              ? "Typing..."
+                              : isOnline
+                                  ? "Online"
+                                  : "Last seen ${formatTimeTo24Hour(lastSeen)}",
+                          style: TextStyle(
+                            color: Color(0xFF64748B),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
         actions: selectedMode
             ? [
-                IconButton(
-                    icon: Icon(Icons.star_outline, color: Colors.green),
-                    onPressed: () {}),
-                IconButton(
-                    icon: Icon(Icons.push_pin, color: Colors.green),
-                    onPressed: () {}),
-                selectedChat.length == 1
-                    ? IconButton(
-                        icon: Icon(Icons.info_outline, color: Colors.blue),
-                        onPressed: () {})
-                    : Container(),
-                IconButton(
-                    icon: Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      openDialog(
-                        context,
-                        CupertinoAlertDialog(
-                          title: const Text("Delete Message"),
-                          content: const Text(
-                              "Are you sure to delete this message?"),
-                          actions: [
-                            CupertinoDialogAction(
-                              isDefaultAction: true,
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text("No"),
-                            ),
-                            CupertinoDialogAction(
-                              isDefaultAction: true,
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                deleteChat();
-                              },
-                              child: const Text("Yes"),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
+                _buildActionButton(
+                  icon: Icons.star_outline,
+                  color: Color(0xFFEC4899),
+                  onPressed: () {},
+                ),
+                _buildActionButton(
+                  icon: Icons.push_pin,
+                  color: Color(0xFF10B981),
+                  onPressed: () {},
+                ),
+                if (selectedChat.length == 1)
+                  _buildActionButton(
+                    icon: Icons.info_outline,
+                    color: Color(0xFF3B82F6),
+                    onPressed: () {},
+                  ),
+                _buildActionButton(
+                  icon: Icons.delete,
+                  color: Color(0xFFEF4444),
+                  onPressed: () {
+                    openDialog(
+                      context,
+                      CupertinoAlertDialog(
+                        title: const Text("Delete Message"),
+                        content:
+                            const Text("Are you sure to delete this message?"),
+                        actions: [
+                          CupertinoDialogAction(
+                            isDefaultAction: true,
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text("No"),
+                          ),
+                          CupertinoDialogAction(
+                            isDefaultAction: true,
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              deleteChat();
+                            },
+                            child: const Text("Yes"),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(width: 8),
               ]
             : [
-                IconButton(
-                    icon: Icon(Icons.phone, color: Colors.blue),
-                    onPressed: () {}),
-                IconButton(
-                    icon: Icon(Icons.video_call, color: Colors.blue),
-                    onPressed: () {}),
-                IconButton(
-                    icon: Icon(Icons.menu, color: Colors.grey),
-                    onPressed: () {
-                      _showOverlay(context);
-                    }),
+                _buildActionButton(
+                  icon: Icons.phone,
+                  color: Color(0xFF10B981),
+                  backgroundColor: Color(0xFF10B981).withOpacity(0.1),
+                  onPressed: () {},
+                ),
+                _buildActionButton(
+                  icon: Icons.video_call,
+                  color: Color(0xFF3B82F6),
+                  backgroundColor: Color(0xFF3B82F6).withOpacity(0.1),
+                  onPressed: () {},
+                ),
+                _buildActionButton(
+                  icon: Icons.menu,
+                  color: Color(0xFF475569),
+                  onPressed: () {
+                    _showOverlay(context);
+                  },
+                ),
+                SizedBox(width: 16),
               ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<List<MessageModel>>(
-              stream: messageService.messagesStream,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting &&
-                    !snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
-                }
-
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text("Belum ada pesan"));
-                }
-
-                var messages = snapshot.data!;
-
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (_scrollController.hasClients) {
-                    _scrollToBottom();
-                  }
-                });
-
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: EdgeInsets.all(10),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index];
-                    bool isMe = message.senderId == widget.user['id'];
-                    final bool isFirst = index == 0 ||
-                        messages[index - 1].senderId != message.senderId;
-                    final bool isLast = index == messages.length - 1 ||
-                        messages[index + 1].senderId != message.senderId;
-
-                    return GestureDetector(
-                      onLongPress: () {
-                        setState(() {
-                          if (selectedChat.contains(message.id)) {
-                            selectedChat.remove(message.id);
-                            if (selectedChat.isEmpty) {
-                              selectedMode = false;
-                            }
-                          } else {
-                            if (selectedChat.isEmpty) {
-                              selectedMode = true;
-                            }
-                            selectedChat.add(message.id);
-                          }
-                        });
-                      },
-                      onTap: () {
-                        setState(() {
-                          if (selectedMode &&
-                              !selectedChat.contains(message.id)) {
-                            selectedChat.add(message.id);
-                          } else if (selectedChat.contains(message.id)) {
-                            selectedChat.remove(message.id);
-                            if (selectedChat.isEmpty) {
-                              selectedMode = false;
-                            }
-                          }
-                        });
-                      },
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFF8FAFC),
+                    Color(0xFFE2E8F0),
+                    Color(0xFFF1F5F9),
+                    Color(0xFFE0F2FE),
+                    Color(0xFFF0F9FF),
+                    Color(0xFFFEFCE8),
+                  ],
+                  stops: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+                ),
+              ),
+              child: StreamBuilder<List<MessageModel>>(
+                stream: messageService.messagesStream,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting &&
+                      !snapshot.hasData) {
+                    return Center(
                       child: Container(
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
-                            color: selectedChat.contains(message.id)
-                                ? Colors.grey.shade300
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(5)),
-                        margin: EdgeInsets.symmetric(vertical: 1),
-                        child: Align(
-                          alignment: isMe
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: IntrinsicWidth(
-                              child: _buildMessage(
-                                  context, message, isMe, isFirst, isLast)),
+                          borderRadius: BorderRadius.circular(22),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white.withOpacity(0.95),
+                              Color(0xFFF8FAFC).withOpacity(0.95),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 32,
+                              offset: Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: CircularProgressIndicator(
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                          strokeWidth: 3,
                         ),
                       ),
                     );
-                  },
-                );
-              },
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(
+                      child: Container(
+                        padding: EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white.withOpacity(0.95),
+                              Color(0xFFF8FAFC).withOpacity(0.95),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 32,
+                              offset: Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          "Belum ada pesan",
+                          style: TextStyle(
+                            color: Color(0xFF64748B),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  var messages = snapshot.data!;
+
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (_scrollController.hasClients) {
+                      _scrollToBottom();
+                    }
+                  });
+
+                  return ListView.builder(
+                    controller: _scrollController,
+                    padding: EdgeInsets.all(24),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final message = messages[index];
+                      bool isMe = message.senderId == widget.user['id'];
+                      final bool isFirst = index == 0 ||
+                          messages[index - 1].senderId != message.senderId;
+                      final bool isLast = index == messages.length - 1 ||
+                          messages[index + 1].senderId != message.senderId;
+
+                      return AnimatedContainer(
+                        duration: Duration(milliseconds: 400),
+                        curve: Curves.easeOut,
+                        margin: EdgeInsets.only(bottom: 16),
+                        child: GestureDetector(
+                          onLongPress: () {
+                            setState(() {
+                              if (selectedChat.contains(message.id)) {
+                                selectedChat.remove(message.id);
+                                if (selectedChat.isEmpty) {
+                                  selectedMode = false;
+                                }
+                              } else {
+                                if (selectedChat.isEmpty) {
+                                  selectedMode = true;
+                                }
+                                selectedChat.add(message.id);
+                              }
+                            });
+                          },
+                          onTap: () {
+                            setState(() {
+                              if (selectedMode &&
+                                  !selectedChat.contains(message.id)) {
+                                selectedChat.add(message.id);
+                              } else if (selectedChat.contains(message.id)) {
+                                selectedChat.remove(message.id);
+                                if (selectedChat.isEmpty) {
+                                  selectedMode = false;
+                                }
+                              }
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: selectedChat.contains(message.id)
+                                  ? Color(0xFFE2E8F0).withOpacity(0.7)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            padding: selectedChat.contains(message.id)
+                                ? EdgeInsets.all(8)
+                                : EdgeInsets.zero,
+                            child: Align(
+                              alignment: isMe
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                              child: Container(
+                                constraints: BoxConstraints(maxWidth: 280),
+                                child: _buildFuturisticMessage(
+                                    context, message, isMe, isFirst, isLast),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ),
           Container(
-            padding: EdgeInsets.all(5),
+            height: 60,
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Colors.grey[100]!)),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.98),
+                  Color(0xFFF8FAFC).withOpacity(0.98),
+                ],
+              ),
+              border: Border(
+                top: BorderSide(
+                  color: Color(0xFFE2E8F0).withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 16,
+                  offset: Offset(0, -4),
+                ),
+              ],
             ),
             child: Row(
               children: [
-                IconButton(
-                    icon: Icon(
-                        _emojiShowing
-                            ? Icons.keyboard_alt_outlined
-                            : Icons.emoji_emotions_outlined,
-                        color: Colors.blue),
-                    onPressed: toggleEmojiKeyboard),
+                SizedBox(width: 24),
+                _buildInputAction(
+                  icon: _emojiShowing
+                      ? Icons.keyboard_alt_outlined
+                      : Icons.emoji_emotions_outlined,
+                  onPressed: toggleEmojiKeyboard,
+                ),
+                SizedBox(width: 12),
                 Expanded(
                   child: Container(
-                    padding: EdgeInsets.only(left: 10),
+                    height: 52,
                     decoration: BoxDecoration(
-                      color: Colors.grey[100]!,
-                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withOpacity(0.9),
+                          Color(0xFFF8FAFC).withOpacity(0.9),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(26),
+                      border: Border.all(
+                        color: Color(0xFFE2E8F0).withOpacity(0.3),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 16,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: TextField(
                       controller: inputController,
                       focusNode: _focusNode,
                       minLines: 1,
-                      maxLines: 5,
+                      maxLines: 1,
                       keyboardType: TextInputType.multiline,
                       autocorrect: true,
-                      style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF1E293B),
+                        fontWeight: FontWeight.w500,
+                      ),
                       onChanged: (value) => onTyping(),
                       decoration: InputDecoration(
-                        hintText: "Type your message...",
+                        hintText: "Type a message...",
+                        hintStyle: TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontSize: 16,
+                        ),
                         border: InputBorder.none,
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.attach_file, color: Colors.blue),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                        suffixIcon: _buildInputAction(
+                          icon: Icons.attach_file,
                           onPressed: pickMedia,
                         ),
                       ),
                     ),
                   ),
                 ),
-                IconButton(
-                  padding: EdgeInsets.all(10),
-                  icon: Icon(
-                    inputController.text.isNotEmpty && !_isListening
-                        ? Icons.send
-                        : _isListening
-                            ? Icons.mic
-                            : Icons.mic_none,
-                    color: Colors.blue,
-                  ),
+                SizedBox(width: 12),
+                _buildInputAction(
+                  icon: inputController.text.isNotEmpty && !_isListening
+                      ? Icons.send
+                      : _isListening
+                          ? Icons.mic
+                          : Icons.mic_none,
                   onPressed: () {
                     if (inputController.text.isNotEmpty && !_isListening) {
                       sendMessage();
@@ -793,29 +1127,56 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
                       _toggleRecording();
                     }
                   },
+                  isSpecial: inputController.text.isNotEmpty || _isListening,
                 ),
+                SizedBox(width: 24),
               ],
             ),
           ),
           Offstage(
             offstage: !_emojiShowing,
-            child: EmojiPicker(
-              textEditingController: inputController,
-              scrollController: _scrollController,
-              config: Config(
-                height: 256,
-                checkPlatformCompatibility: true,
-                viewOrderConfig: const ViewOrderConfig(),
-                emojiViewConfig: EmojiViewConfig(
-                  emojiSizeMax: 28 *
-                      (foundation.defaultTargetPlatform == TargetPlatform.iOS
-                          ? 1.2
-                          : 1.0),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withOpacity(0.98),
+                    Color(0xFFF8FAFC).withOpacity(0.98),
+                  ],
                 ),
-                skinToneConfig: const SkinToneConfig(),
-                categoryViewConfig: const CategoryViewConfig(),
-                bottomActionBarConfig: const BottomActionBarConfig(),
-                searchViewConfig: const SearchViewConfig(),
+                border: Border(
+                  top: BorderSide(
+                    color: Color(0xFFE2E8F0).withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: EmojiPicker(
+                textEditingController: inputController,
+                scrollController: _scrollController,
+                config: Config(
+                  height: 256,
+                  checkPlatformCompatibility: true,
+                  viewOrderConfig: const ViewOrderConfig(),
+                  emojiViewConfig: EmojiViewConfig(
+                    emojiSizeMax: 28 *
+                        (foundation.defaultTargetPlatform == TargetPlatform.iOS
+                            ? 1.2
+                            : 1.0),
+                    backgroundColor: Colors.transparent,
+                  ),
+                  skinToneConfig: const SkinToneConfig(),
+                  categoryViewConfig: const CategoryViewConfig(
+                    backgroundColor: Colors.transparent,
+                  ),
+                  bottomActionBarConfig: const BottomActionBarConfig(
+                    backgroundColor: Colors.transparent,
+                  ),
+                  searchViewConfig: const SearchViewConfig(
+                    backgroundColor: Colors.transparent,
+                  ),
+                ),
               ),
             ),
           ),
@@ -825,82 +1186,164 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
   }
 }
 
+Widget _buildFuturisticMessage(BuildContext context, MessageModel message,
+    bool isMe, bool isFirst, bool isLast) {
+  return Container(
+    decoration: BoxDecoration(
+      gradient: isMe
+          ? LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF3B82F6).withOpacity(0.9),
+                Color(0xFF06B6D4).withOpacity(0.9),
+              ],
+            )
+          : LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.95),
+                Color(0xFFF8FAFC).withOpacity(0.95),
+              ],
+            ),
+      borderRadius: BorderRadius.circular(24).copyWith(
+        bottomLeft: isMe ? Radius.circular(24) : Radius.circular(8),
+        bottomRight: isMe ? Radius.circular(8) : Radius.circular(24),
+      ),
+      border: Border.all(
+        color: isMe
+            ? Colors.white.withOpacity(0.2)
+            : Color(0xFFE2E8F0).withOpacity(0.3),
+        width: 1,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.06),
+          blurRadius: 32,
+          offset: Offset(0, 8),
+        ),
+        BoxShadow(
+          color: Colors.black.withOpacity(0.04),
+          blurRadius: 8,
+          offset: Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment:
+          isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: EdgeInsets.fromLTRB(20, 16, 20, 16),
+          child: _buildMessage(context, message, isMe, isFirst, isLast),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _formatTime(message.timestamp),
+                style: TextStyle(
+                  fontSize: 12,
+                  color:
+                      isMe ? Colors.white.withOpacity(0.8) : Color(0xFF64748B),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              if (isMe) ...[
+                SizedBox(width: 6),
+                Icon(
+                  Icons.done_all,
+                  size: 16,
+                  color: Colors.white.withOpacity(0.8),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// Helper method to build input action buttons
+Widget _buildInputAction({
+  required IconData icon,
+  required VoidCallback onPressed,
+  bool isSpecial = false,
+}) {
+  return Container(
+    width: 44,
+    height: 44,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(22),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: isSpecial
+            ? [
+                Color(0xFFEC4899).withOpacity(0.1),
+                Color(0xFFF472B6).withOpacity(0.1),
+              ]
+            : [
+                Colors.white.withOpacity(0.8),
+                Color(0xFFF8FAFC).withOpacity(0.8),
+              ],
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 12,
+          offset: Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: onPressed,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.9),
+              width: 1,
+            ),
+          ),
+          child: Icon(
+            icon,
+            size: 20,
+            color: isSpecial ? Color(0xFFEC4899) : Color(0xFF475569),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+// Helper method to format time
+String _formatTime(DateTime timestamp) {
+  final now = DateTime.now();
+  final messageTime = timestamp;
+
+  if (now.day == messageTime.day &&
+      now.month == messageTime.month &&
+      now.year == messageTime.year) {
+    return "${messageTime.hour.toString().padLeft(2, '0')}:${messageTime.minute.toString().padLeft(2, '0')}";
+  }
+
+  return "${messageTime.day}/${messageTime.month} ${messageTime.hour.toString().padLeft(2, '0')}:${messageTime.minute.toString().padLeft(2, '0')}";
+}
+
 Widget _buildMessage(BuildContext context, MessageModel message, bool isMe,
     bool isFirst, bool isLast) {
   if (message.type == "text") {
-    return Container(
-      padding: EdgeInsets.only(top: 7, bottom: 6, left: 8, right: 8),
-      margin: EdgeInsets.symmetric(vertical: 3),
-      constraints:
-          BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-      decoration: BoxDecoration(
-        color: isMe ? Colors.blue : Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: isMe
-              ? const Radius.circular(10)
-              : isFirst
-                  ? const Radius.circular(10)
-                  : Radius.zero,
-          topRight: isMe
-              ? isFirst
-                  ? const Radius.circular(10)
-                  : Radius.zero
-              : const Radius.circular(10),
-          bottomLeft: isMe
-              ? const Radius.circular(10)
-              : isLast
-                  ? const Radius.circular(10)
-                  : Radius.zero,
-          bottomRight: isMe
-              ? isLast
-                  ? const Radius.circular(10)
-                  : Radius.zero
-              : const Radius.circular(10),
-        ),
-        boxShadow: [
-          BoxShadow(color: Colors.black12, spreadRadius: 1, blurRadius: 3),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 5),
-            child: Text(
-              message.message,
-              style: TextStyle(
-                  color: isMe ? Colors.white : Colors.black, fontSize: 16),
-            ),
-          ),
-          SizedBox(
-            width: 5,
-          ),
-          Text(
-            "${message.timestamp.hour.toString().padLeft(2, '0')}.${message.timestamp.minute.toString().padLeft(2, '0')}",
-            style: TextStyle(
-                fontSize: 11, color: isMe ? Colors.white70 : Colors.grey[600]),
-          ),
-          SizedBox(
-            width: 1,
-          ),
-          isMe
-              ? Icon(
-                  Icons.check,
-                  size: 16,
-                  shadows: [
-                    message.status == 2 || message.status == 3
-                        ? Shadow(
-                            color: message.status == 3
-                                ? Colors.white
-                                : Colors.white60,
-                            offset: Offset(4, 0))
-                        : Shadow(color: Colors.transparent)
-                  ],
-                  color: message.status == 3 ? Colors.white : Colors.white60,
-                )
-              : Container()
-        ],
-      ),
+    return Text(
+      message.message,
+      style: TextStyle(color: isMe ? Colors.white : Colors.black, fontSize: 16),
     );
   } else if (message.type == "image") {
     return GestureDetector(
@@ -913,79 +1356,18 @@ Widget _buildMessage(BuildContext context, MessageModel message, bool isMe,
           ),
         );
       },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 2),
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: isMe ? Colors.blue : Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: isMe
-                ? const Radius.circular(10)
-                : isFirst
-                    ? const Radius.circular(10)
-                    : Radius.zero,
-            topRight: isMe
-                ? isFirst
-                    ? const Radius.circular(10)
-                    : Radius.zero
-                : const Radius.circular(10),
-            bottomLeft: isMe
-                ? const Radius.circular(10)
-                : isLast
-                    ? const Radius.circular(10)
-                    : Radius.zero,
-            bottomRight: isMe
-                ? isLast
-                    ? const Radius.circular(10)
-                    : Radius.zero
-                : const Radius.circular(10),
-          ),
-          boxShadow: [
-            BoxShadow(color: Colors.black12, spreadRadius: 1, blurRadius: 3),
-          ],
-        ),
-        child: Stack(
-          children: [
-            message.localPath != null && File(message.localPath!).existsSync()
-                ? Opacity(
-                    opacity: message.status == 0 ? 0.5 : 1,
-                    child: Image.file(
-                      File(message.localPath!),
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : Image.network(
-                    message.message,
-                    fit: BoxFit.cover,
-                  ),
-            message.status == 0
-                ? Positioned(
-                    bottom: 5,
-                    right: 5,
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                      ),
-                    ),
-                  )
-                : Positioned(
-                    bottom: 5,
-                    right: 5,
-                    child: Text(
-                      "${message.timestamp.hour.toString().padLeft(2, '0')}.${message.timestamp.minute.toString().padLeft(2, '0')}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-          ],
-        ),
-      ),
+      child: message.localPath != null && File(message.localPath!).existsSync()
+          ? Opacity(
+              opacity: message.status == 0 ? 0.5 : 1,
+              child: Image.file(
+                File(message.localPath!),
+                fit: BoxFit.cover,
+              ),
+            )
+          : Image.network(
+              message.message,
+              fit: BoxFit.cover,
+            ),
     );
   } else if (message.type == "video") {
     return GestureDetector(
@@ -998,81 +1380,104 @@ Widget _buildMessage(BuildContext context, MessageModel message, bool isMe,
         //   ),
         // );
       },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 2),
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: isMe ? Colors.blue : Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: isMe
-                ? const Radius.circular(10)
-                : isFirst
-                    ? const Radius.circular(10)
-                    : Radius.zero,
-            topRight: isMe
-                ? isFirst
-                    ? const Radius.circular(10)
-                    : Radius.zero
-                : const Radius.circular(10),
-            bottomLeft: isMe
-                ? const Radius.circular(10)
-                : isLast
-                    ? const Radius.circular(10)
-                    : Radius.zero,
-            bottomRight: isMe
-                ? isLast
-                    ? const Radius.circular(10)
-                    : Radius.zero
-                : const Radius.circular(10),
-          ),
-          boxShadow: [
-            BoxShadow(color: Colors.black12, spreadRadius: 1, blurRadius: 3),
-          ],
-        ),
-        child: Stack(
-          children: [
-            message.thumbnailPath != null
-                ? Opacity(
-                    opacity: message.status == 0 ? 0.5 : 1,
-                    child: Image.file(
-                      File(message.thumbnailPath!),
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : VideoPlayer(
-                    videoUrl: message.localPath != null
-                        ? message.localPath!
-                        : message.message),
-            message.status == 0
-                ? Positioned(
-                    bottom: 5,
-                    right: 5,
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                      ),
-                    ),
-                  )
-                : Positioned(
-                    bottom: 5,
-                    right: 5,
-                    child: Text(
-                      "${message.timestamp.hour.toString().padLeft(2, '0')}.${message.timestamp.minute.toString().padLeft(2, '0')}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white,
-                      ),
+      child: Stack(
+        children: [
+          message.thumbnailPath != null
+              ? Opacity(
+                  opacity: message.status == 0 ? 0.5 : 1,
+                  child: Image.file(
+                    File(message.thumbnailPath!),
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : VideoPlayer(
+                  videoUrl: message.localPath != null
+                      ? message.localPath!
+                      : message.message),
+          message.status == 0
+              ? Positioned(
+                  bottom: 5,
+                  right: 5,
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
                     ),
                   ),
-          ],
-        ),
+                )
+              : Positioned(
+                  bottom: 5,
+                  right: 5,
+                  child: Text(
+                    "${message.timestamp.hour.toString().padLeft(2, '0')}.${message.timestamp.minute.toString().padLeft(2, '0')}",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+        ],
       ),
     );
   } else {
     return SizedBox.shrink();
   }
+}
+
+Widget _buildActionButton({
+  required IconData icon,
+  required Color color,
+  Color? backgroundColor,
+  required VoidCallback onPressed,
+}) {
+  return Container(
+    margin: EdgeInsets.only(right: 8, top: 8, bottom: 8),
+    child: Material(
+      elevation: 0,
+      borderRadius: BorderRadius.circular(22),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: backgroundColor != null
+                ? [
+                    backgroundColor,
+                    backgroundColor.withOpacity(0.8),
+                  ]
+                : [
+                    Colors.white.withOpacity(0.8),
+                    Color(0xFFF8FAFC).withOpacity(0.8),
+                  ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
+            BoxShadow(
+              color: Colors.white.withOpacity(0.9),
+              blurRadius: 0,
+              offset: Offset(0, 1),
+              spreadRadius: 0,
+            ),
+          ],
+        ),
+        child: IconButton(
+          icon: Icon(
+            icon,
+            size: 20,
+            color: color,
+          ),
+          onPressed: onPressed,
+          padding: EdgeInsets.zero,
+        ),
+      ),
+    ),
+  );
 }
