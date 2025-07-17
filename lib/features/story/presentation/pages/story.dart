@@ -114,7 +114,7 @@ class _StoryState extends State<Story> with TickerProviderStateMixin {
     );
     if (result != null) {
       await _uploadStory(result);
-      await _loadStories(); // Refresh after upload
+      await _loadStories();
     }
   }
 

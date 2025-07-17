@@ -1,4 +1,4 @@
-import 'package:chat/pages/story.dart';
+import 'package:chat/features/story/presentation/pages/story.dart';
 import 'package:flutter/material.dart';
 
 class StoryViewer extends StatelessWidget {

@@ -8,7 +8,7 @@ import 'package:chat/controllers/story_controller.dart';
 import 'package:chat/features/call/presentation/pages/call.dart';
 import 'package:chat/features/chat/presentation/pages/chat.dart';
 import 'package:chat/features/settings/presentation/pages/setting.dart';
-import 'package:chat/pages/story.dart';
+import 'package:chat/features/story/presentation/pages/story.dart';
 import 'package:chat/services/room_service.dart';
 import 'package:chat/services/user_service.dart';
 import 'package:flutter/cupertino.dart';
@@ -295,7 +295,7 @@ class _LayoutState extends State<Layout> {
                             ),
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 32,
+                              fontSize: 28,
                               color: colorScheme.onBackground,
                             ),
                           ),
