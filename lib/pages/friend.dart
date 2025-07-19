@@ -4,9 +4,7 @@ import 'package:chat/features/chat/presentation/pages/detail_chat.dart';
 import 'package:chat/pages/user_profile.dart';
 import 'package:chat/services/room_service.dart';
 import 'package:chat/services/user_service.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:iconsax_plus/iconsax_plus.dart';
 
 class Friend extends StatefulWidget {
   const Friend({super.key, required this.user});
@@ -56,6 +54,7 @@ class _FriendState extends State<Friend> {
   void dispose() {
     _roomService.dispose();
     _userService.dispose();
+    searchController.dispose();
     super.dispose();
   }
 
@@ -71,10 +70,8 @@ class _FriendState extends State<Friend> {
     Map<String, dynamic> res =
         await _roomService.openRoom(widget.user['id'], id);
     if (res['status']) {
-      // ignore: use_build_context_synchronously
       Navigator.pop(context);
       await Navigator.push(
-        // ignore: use_build_context_synchronously
         context,
         _goPage(DetailChat(data: res['data'], user: widget.user)),
       );
@@ -83,7 +80,6 @@ class _FriendState extends State<Friend> {
 
   void _navigateToUserProfile(BuildContext context, UserModel user) async {
     await Navigator.push(
-      // ignore: use_build_context_synchronously
       context,
       _goPage(
         UserProfile(
@@ -105,65 +101,68 @@ class _FriendState extends State<Friend> {
           alignment: Alignment.bottomCenter,
           children: [
             Container(
-                color: Colors.white,
-                child: Padding(
-                    padding: const EdgeInsets.only(right: 0, left: 0, top: 35),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          decoration: BoxDecoration(
-                              border: Border(
-                                  bottom: BorderSide(
+              color: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 35),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
                             color: Color(0xFFf3f4f6),
-                          ))),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              IconButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                icon: const Icon(
-                                  Icons.chevron_left,
-                                  color: Colors.blue,
-                                  size: 30,
-                                ),
-                              ),
-                              Text(
-                                "Friend",
-                                style: const TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20),
-                              ),
-                            ],
                           ),
                         ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: CupertinoTextField(
-                            controller: searchController,
-                            prefix: const Padding(
-                              padding: EdgeInsets.only(left: 10),
-                              child: Icon(
-                                IconsaxPlusLinear.search_normal_1,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            placeholder: "Search friend",
-                            padding: const EdgeInsets.all(15),
-                            decoration: BoxDecoration(
-                              color: Color(0xFFf9fafb),
-                              borderRadius: BorderRadius.circular(50),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            icon: const Icon(
+                              Icons.chevron_left,
+                              color: Colors.blue,
+                              size: 30,
                             ),
                           ),
+                          const Text(
+                            "Friend",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Updated search input using TextField with layout.dart style
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: TextField(
+                        controller: searchController,
+                        decoration: InputDecoration(
+                          prefixIcon:
+                              const Icon(Icons.search, color: Colors.grey),
+                          hintText: "Search friend",
+                          filled: true,
+                          fillColor: const Color(0xFFf9fafb),
+                          contentPadding: const EdgeInsets.all(15),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(50),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
-                      ],
-                    ))),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -176,15 +175,13 @@ class _FriendState extends State<Friend> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF2FBEFF)));
+                child: CircularProgressIndicator(color: Color(0xFF2FBEFF)),
+              );
             }
-
             if (snapshot.hasError) {
               return const Center(child: Text("Error loading users"));
             }
-
             List<UserModel> users = snapshot.data ?? [];
-
             return RefreshIndicator(
               onRefresh: _refreshUser,
               color: Colors.white,
@@ -204,10 +201,39 @@ class _FriendState extends State<Friend> {
                       itemBuilder: (context, index) {
                         var user = users[index];
                         return Container(
-                          color: Colors.white,
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0x80FFFFFF),
+                                Color(0x80F8FAFC),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: const Color(0x33E2E8F0),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.9),
+                                blurRadius: 1,
+                                offset: const Offset(0, 1),
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
                           child: ListTile(
                             key: ValueKey(user.id),
-                            minTileHeight: 10,
+                            minVerticalPadding: 10,
                             onTap: () {
                               openRoom(user.id);
                             },
@@ -217,13 +243,11 @@ class _FriendState extends State<Friend> {
                               onTap: () {
                                 _navigateToUserProfile(context, user);
                               },
-                              child: user.profilePicture!.isNotEmpty
+                              child: user.profilePicture != null &&
+                                      user.profilePicture!.isNotEmpty
                                   ? CircleAvatar(
-                                      backgroundImage: user.profilePicture !=
-                                                  null ||
-                                              user.profilePicture != ""
-                                          ? NetworkImage(user.profilePicture!)
-                                          : AssetImage("assets/img/user.png"),
+                                      backgroundImage:
+                                          NetworkImage(user.profilePicture!),
                                       radius: 25,
                                     )
                                   : Image.asset("assets/img/user.png"),
@@ -242,47 +266,42 @@ class _FriendState extends State<Friend> {
                               style: const TextStyle(fontSize: 14),
                             ),
                             trailing: FilledButton(
-                                onPressed: () {
-                                  changeFriendship(user.id);
-                                },
-                                style: ButtonStyle(
-                                    backgroundColor: WidgetStatePropertyAll(
-                                        !user.isFriend
-                                            ? Colors.blue
-                                            : Colors.red),
-                                    foregroundColor:
-                                        WidgetStatePropertyAll(Colors.white),
-                                    padding: WidgetStatePropertyAll(
-                                        EdgeInsets.all(0)),
-                                    shape: WidgetStatePropertyAll(
-                                        RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10)))),
-                                child: SizedBox(
-                                  width: 150,
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        !user.isFriend
-                                            ? IconsaxPlusLinear.user_add
-                                            : IconsaxPlusLinear.user_remove,
-                                        size: 20,
-                                      ),
-                                      SizedBox(
-                                        width: 5,
-                                      ),
-                                      Text(
-                                        !user.isFriend
-                                            ? "Add Friend"
-                                            : "Remove Friend",
-                                        style: TextStyle(fontSize: 14),
-                                      )
-                                    ],
-                                  ),
-                                )),
+                              onPressed: () {
+                                changeFriendship(user.id);
+                              },
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(
+                                  !user.isFriend ? Colors.blue : Colors.red,
+                                ),
+                                foregroundColor:
+                                    MaterialStateProperty.all(Colors.white),
+                                padding: MaterialStateProperty.all(
+                                  const EdgeInsets.all(0),
+                                ),
+                                shape: MaterialStateProperty.all(
+                                  RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10)),
+                                ),
+                              ),
+                              child: SizedBox(
+                                width: 150,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.group,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      !user.isFriend
+                                          ? "Add Friend"
+                                          : "Remove Friend",
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
                         );
                       },

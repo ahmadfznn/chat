@@ -1189,6 +1189,7 @@ class _DetailChatState extends State<DetailChat> with WidgetsBindingObserver {
 Widget _buildFuturisticMessage(BuildContext context, MessageModel message,
     bool isMe, bool isFirst, bool isLast) {
   return Container(
+    clipBehavior: Clip.antiAlias,
     decoration: BoxDecoration(
       gradient: isMe
           ? LinearGradient(
@@ -1203,8 +1204,8 @@ Widget _buildFuturisticMessage(BuildContext context, MessageModel message,
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withOpacity(0.95),
-                Color(0xFFF8FAFC).withOpacity(0.95),
+                Color(0xFF06B6D4).withOpacity(0.9),
+                Color(0xFF3B82F6).withOpacity(0.9),
               ],
             ),
       borderRadius: BorderRadius.circular(24).copyWith(
@@ -1212,9 +1213,7 @@ Widget _buildFuturisticMessage(BuildContext context, MessageModel message,
         bottomRight: isMe ? Radius.circular(8) : Radius.circular(24),
       ),
       border: Border.all(
-        color: isMe
-            ? Colors.white.withOpacity(0.2)
-            : Color(0xFFE2E8F0).withOpacity(0.3),
+        color: Colors.white.withOpacity(0.2),
         width: 1,
       ),
       boxShadow: [
@@ -1235,11 +1234,10 @@ Widget _buildFuturisticMessage(BuildContext context, MessageModel message,
           isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Container(
-          padding: EdgeInsets.fromLTRB(20, 16, 20, 16),
           child: _buildMessage(context, message, isMe, isFirst, isLast),
         ),
         Padding(
-          padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
+          padding: EdgeInsets.fromLTRB(12, 0, 12, 8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1247,8 +1245,7 @@ Widget _buildFuturisticMessage(BuildContext context, MessageModel message,
                 _formatTime(message.timestamp),
                 style: TextStyle(
                   fontSize: 12,
-                  color:
-                      isMe ? Colors.white.withOpacity(0.8) : Color(0xFF64748B),
+                  color: Colors.white.withOpacity(0.8),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -1335,15 +1332,18 @@ String _formatTime(DateTime timestamp) {
     return "${messageTime.hour.toString().padLeft(2, '0')}:${messageTime.minute.toString().padLeft(2, '0')}";
   }
 
-  return "${messageTime.day}/${messageTime.month} ${messageTime.hour.toString().padLeft(2, '0')}:${messageTime.minute.toString().padLeft(2, '0')}";
+  return "${messageTime.hour.toString().padLeft(2, '0')}:${messageTime.minute.toString().padLeft(2, '0')}";
 }
 
 Widget _buildMessage(BuildContext context, MessageModel message, bool isMe,
     bool isFirst, bool isLast) {
   if (message.type == "text") {
-    return Text(
-      message.message,
-      style: TextStyle(color: isMe ? Colors.white : Colors.black, fontSize: 16),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(12, 8, 12, 8),
+      child: Text(
+        message.message,
+        style: TextStyle(color: Colors.white, fontSize: 16),
+      ),
     );
   } else if (message.type == "image") {
     return GestureDetector(
@@ -1356,18 +1356,22 @@ Widget _buildMessage(BuildContext context, MessageModel message, bool isMe,
           ),
         );
       },
-      child: message.localPath != null && File(message.localPath!).existsSync()
-          ? Opacity(
-              opacity: message.status == 0 ? 0.5 : 1,
-              child: Image.file(
-                File(message.localPath!),
-                fit: BoxFit.cover,
-              ),
-            )
-          : Image.network(
-              message.message,
-              fit: BoxFit.cover,
-            ),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child:
+            message.localPath != null && File(message.localPath!).existsSync()
+                ? Opacity(
+                    opacity: message.status == 0 ? 0.5 : 1,
+                    child: Image.file(
+                      File(message.localPath!),
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : Image.network(
+                    message.message,
+                    fit: BoxFit.cover,
+                  ),
+      ),
     );
   } else if (message.type == "video") {
     return GestureDetector(

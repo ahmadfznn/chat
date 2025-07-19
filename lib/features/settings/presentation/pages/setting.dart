@@ -70,7 +70,6 @@ class _SettingState extends State<Setting> {
     await storage.deleteAll();
 
     if (mounted) {
-      // ignore: use_build_context_synchronously
       Popup().show(context, "Sign out Successfully", true);
     }
 
@@ -78,7 +77,6 @@ class _SettingState extends State<Setting> {
 
     if (mounted) {
       await Navigator.pushReplacement(
-          // ignore: use_build_context_synchronously
           context,
           _goPage(const Auth(
             page: 0,
@@ -94,343 +92,282 @@ class _SettingState extends State<Setting> {
     await dbs.resetDatabase();
   }
 
+  // Helper method to build a styled setting tile
+  Widget buildSettingTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8, left: 16, right: 16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0x80FFFFFF),
+            Color(0x80F8FAFC),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Color(0x33E2E8F0),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.white.withOpacity(0.9),
+            blurRadius: 1,
+            offset: const Offset(0, 1),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: ListTile(
+        onTap: onTap,
+        leading: Icon(icon, color: Colors.blue),
+        title: Text(
+          title,
+          style: TextStyle(color: Colors.grey.shade700),
+        ),
+        trailing:
+            Icon(Icons.chevron_right_outlined, color: Colors.grey.shade700),
+        tileColor: Colors.transparent,
+      ),
+    );
+  }
+
+  // Build a group of setting options from a given list
+  Widget buildSettingGroup(String header, List<Map<String, dynamic>> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 20, bottom: 10),
+          child: Text(header, style: TextStyle(color: Colors.grey.shade600)),
+        ),
+        ...items.map(
+          (item) => buildSettingTile(
+            icon: item['icon'],
+            title: item['title'],
+            onTap: item['onTap'],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Define groups of settings
+    final List<Map<String, dynamic>> accountSettings = [
+      {
+        'icon': Icons.notifications_outlined,
+        'title': 'Notification',
+        'onTap': () {
+          Navigator.push(context, _goPage(NotificationPage(user: user)));
+        },
+      },
+      {
+        'icon': Icons.lock_outline,
+        'title': 'Privacy',
+        'onTap': () async {
+          await Navigator.push(
+              context, _goPage(PrivacyPage(user: widget.user)));
+        },
+      },
+      {
+        'icon': Icons.shield_outlined,
+        'title': 'Security',
+        'onTap': () async {
+          await Navigator.push(
+              context, _goPage(SecurityPage(user: widget.user)));
+        },
+      },
+      {
+        'icon': Icons.color_lens_outlined,
+        'title': 'Personalization',
+        'onTap': () async {
+          await Navigator.push(
+              context, _goPage(PersonalizationPage(user: widget.user)));
+        },
+      },
+      {
+        'icon': Icons.chat_outlined,
+        'title': 'Chat',
+        'onTap': () async {
+          await Navigator.push(context, _goPage(ChatPage(user: widget.user)));
+        },
+      },
+    ];
+
+    final List<Map<String, dynamic>> dataSettings = [
+      {
+        'icon': Icons.data_exploration_outlined,
+        'title': 'Data Usage',
+        'onTap': () async {
+          await Navigator.push(
+              context, _goPage(DataUsagePage(user: widget.user)));
+        },
+      },
+      {
+        'icon': Icons.delete_outline_outlined,
+        'title': 'Reset Data',
+        'onTap': () async {
+          await Navigator.push(context, _goPage(ResetPage(user: widget.user)));
+        },
+      },
+    ];
+
+    final List<Map<String, dynamic>> otherSettings = [
+      {
+        'icon': Icons.help_outline,
+        'title': 'Help',
+        'onTap': () async {
+          await Navigator.push(context, _goPage(HelpPage()));
+        },
+      },
+      {
+        'icon': Icons.logout_outlined,
+        'title': 'Logout',
+        'onTap': () {
+          openDialog(
+            context,
+            CupertinoAlertDialog(
+              title: const Text("Logout"),
+              content: const Text("Are you sure to logout now?"),
+              actions: [
+                CupertinoDialogAction(
+                  isDefaultAction: true,
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("No"),
+                ),
+                CupertinoDialogAction(
+                  isDefaultAction: true,
+                  onPressed: () {
+                    logout(context);
+                  },
+                  child: const Text("Yes"),
+                ),
+              ],
+            ),
+          );
+        },
+      },
+    ];
+
     return Scaffold(
-        backgroundColor: Colors.grey[100],
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.white,
-          elevation: 1,
-          shadowColor: Color(0xFFf3f4f6),
-          leading: IconButton(
-            padding: EdgeInsets.all(5),
-            icon: Icon(Icons.chevron_left, size: 30, color: Colors.grey[600]),
-            onPressed: () => Navigator.pop(context),
-          ),
-          leadingWidth: 25,
-          centerTitle: true,
-          title: Text("Setting",
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black)),
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        elevation: 1,
+        shadowColor: const Color(0xFFf3f4f6),
+        leading: IconButton(
+          padding: const EdgeInsets.all(5),
+          icon: Icon(Icons.chevron_left, size: 30, color: Colors.grey[600]),
+          onPressed: () => Navigator.pop(context),
         ),
-        body: RefreshIndicator(
-          onRefresh: refreshProfile,
-          child: ListView.builder(
-              itemCount: 1,
-              itemBuilder: (context, index) {
-                return Container(
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  width: double.infinity,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        color: Colors.white,
-                        padding: EdgeInsets.all(20),
-                        width: double.infinity,
-                        child: Column(
+        leadingWidth: 25,
+        centerTitle: true,
+        title: const Text("Setting",
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black)),
+      ),
+      body: RefreshIndicator(
+        onRefresh: refreshProfile,
+        child: ListView(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              width: double.infinity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.all(20),
+                    width: double.infinity,
+                    child: Column(
+                      children: [
+                        Stack(
+                          alignment: Alignment.bottomRight,
                           children: [
-                            Stack(
-                              alignment: Alignment.bottomRight,
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: Colors.white,
-                                  backgroundImage:
-                                      widget.user['profile_picture'] != null
-                                          ? NetworkImage(
-                                              widget.user['profile_picture'])
-                                          : AssetImage("assets/img/user.png"),
-                                  radius: 70,
+                            CircleAvatar(
+                              backgroundColor: Colors.white,
+                              backgroundImage: widget.user['profile_picture'] !=
+                                      null
+                                  ? NetworkImage(widget.user['profile_picture'])
+                                  : const AssetImage("assets/img/user.png")
+                                      as ImageProvider,
+                              radius: 70,
+                            ),
+                            Positioned(
+                              bottom: 5,
+                              right: 5,
+                              child: IconButton(
+                                onPressed: () async {
+                                  var updatedUser = await Navigator.push(
+                                      context,
+                                      _goPage(Profile(user: widget.user)));
+                                  setState(() {
+                                    user = updatedUser;
+                                  });
+                                },
+                                icon: const Icon(Icons.edit),
+                                iconSize: 25,
+                                style: ButtonStyle(
+                                  backgroundColor:
+                                      const MaterialStatePropertyAll(
+                                          Colors.grey),
                                 ),
-                                Positioned(
-                                    bottom: 5,
-                                    right: 5,
-                                    child: IconButton(
-                                      onPressed: () async {
-                                        var updatedUser = await Navigator.push(
-                                            context,
-                                            _goPage(
-                                                Profile(user: widget.user)));
-                                        setState(() {
-                                          user = updatedUser;
-                                        });
-                                      },
-                                      icon: Icon(Icons.edit),
-                                      iconSize: 25,
-                                      style: ButtonStyle(
-                                          backgroundColor:
-                                              WidgetStatePropertyAll(
-                                                  Colors.grey)),
-                                      color: Colors.white,
-                                    ))
-                              ],
-                            ),
-                            SizedBox(
-                              height: 15,
-                            ),
-                            Text(widget.user['displayName'] ?? "",
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey.shade800)),
-                            Text("@${widget.user['username']}",
-                                style: TextStyle(
-                                    fontSize: 13, color: Colors.grey.shade500)),
-                            SizedBox(
-                              height: 5,
-                            ),
-                            Text("Mobile Developer | Coding lover | Stay focus",
-                                style: TextStyle(
-                                    fontSize: 14, color: Colors.grey.shade600))
+                                color: Colors.white,
+                              ),
+                            )
                           ],
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(left: 10),
-                              child: Text(
-                                "Account",
-                                style: TextStyle(color: Colors.grey.shade600),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            ListTile(
-                              leading: Icon(
-                                Icons.notifications_outlined,
-                                color: Colors.blue,
-                              ),
-                              title: Text(
-                                "Notification",
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                              trailing: Icon(Icons.chevron_right_outlined,
-                                  color: Colors.grey.shade700),
-                              tileColor: Colors.white,
-                              onTap: () {
-                                Navigator.push(context,
-                                    _goPage(NotificationPage(user: user)));
-                              },
-                              shape: Border(
-                                  bottom:
-                                      BorderSide(color: Colors.grey.shade300)),
-                            ),
-                            ListTile(
-                              onTap: () async {
-                                await Navigator.push(context,
-                                    _goPage(PrivacyPage(user: widget.user)));
-                              },
-                              leading: Icon(
-                                Icons.lock_outline,
-                                color: Colors.blue,
-                              ),
-                              title: Text(
-                                "Privacy",
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                              trailing: Icon(Icons.chevron_right_outlined,
-                                  color: Colors.grey.shade700),
-                              tileColor: Colors.white,
-                              shape: Border(
-                                  bottom:
-                                      BorderSide(color: Colors.grey.shade300)),
-                            ),
-                            ListTile(
-                              onTap: () async {
-                                await Navigator.push(context,
-                                    _goPage(SecurityPage(user: widget.user)));
-                              },
-                              leading: Icon(
-                                Icons.shield_outlined,
-                                color: Colors.blue,
-                              ),
-                              title: Text(
-                                "Security",
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                              trailing: Icon(Icons.chevron_right_outlined,
-                                  color: Colors.grey.shade700),
-                              tileColor: Colors.white,
-                              shape: Border(
-                                  bottom:
-                                      BorderSide(color: Colors.grey.shade300)),
-                            ),
-                            ListTile(
-                              onTap: () async {
-                                await Navigator.push(
-                                    context,
-                                    _goPage(PersonalizationPage(
-                                        user: widget.user)));
-                              },
-                              leading: Icon(
-                                Icons.color_lens_outlined,
-                                color: Colors.blue,
-                              ),
-                              title: Text(
-                                "Personalization",
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                              trailing: Icon(Icons.chevron_right_outlined,
-                                  color: Colors.grey.shade700),
-                              tileColor: Colors.white,
-                              shape: Border(
-                                  bottom:
-                                      BorderSide(color: Colors.grey.shade300)),
-                            ),
-                            ListTile(
-                              onTap: () async {
-                                await Navigator.push(context,
-                                    _goPage(ChatPage(user: widget.user)));
-                              },
-                              leading: Icon(
-                                Icons.chat_outlined,
-                                color: Colors.blue,
-                              ),
-                              title: Text(
-                                "Chat",
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                              trailing: Icon(Icons.chevron_right_outlined,
-                                  color: Colors.grey.shade700),
-                              tileColor: Colors.white,
-                            ),
-                            SizedBox(
-                              height: 20,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 10),
-                              child: Text(
-                                "Data & Storage",
-                                style: TextStyle(color: Colors.grey.shade600),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            ListTile(
-                              onTap: () async {
-                                await Navigator.push(context,
-                                    _goPage(DataUsagePage(user: widget.user)));
-                              },
-                              leading: Icon(
-                                Icons.data_exploration_outlined,
-                                color: Colors.blue,
-                              ),
-                              title: Text(
-                                "Data Usage",
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                              trailing: Icon(Icons.chevron_right_outlined,
-                                  color: Colors.grey.shade700),
-                              tileColor: Colors.white,
-                              shape: Border(
-                                  bottom:
-                                      BorderSide(color: Colors.grey.shade300)),
-                            ),
-                            ListTile(
-                              onTap: () async {
-                                await Navigator.push(context,
-                                    _goPage(ResetPage(user: widget.user)));
-                              },
-                              leading: Icon(
-                                Icons.delete_outline_outlined,
-                                color: Colors.blue,
-                              ),
-                              title: Text(
-                                "Reset Data",
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                              trailing: Icon(Icons.chevron_right_outlined,
-                                  color: Colors.grey.shade700),
-                              tileColor: Colors.white,
-                            ),
-                            SizedBox(
-                              height: 20,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 10),
-                              child: Text(
-                                "Other",
-                                style: TextStyle(color: Colors.grey.shade600),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            ListTile(
-                              onTap: () async {
-                                await Navigator.push(
-                                    context, _goPage(HelpPage()));
-                              },
-                              leading: Icon(
-                                Icons.help_outline,
-                                color: Colors.blue,
-                              ),
-                              title: Text(
-                                "Help",
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                              trailing: Icon(Icons.chevron_right_outlined,
-                                  color: Colors.grey.shade700),
-                              tileColor: Colors.white,
-                              shape: Border(
-                                  bottom:
-                                      BorderSide(color: Colors.grey.shade300)),
-                            ),
-                            ListTile(
-                              onTap: () {
-                                openDialog(
-                                  context,
-                                  CupertinoAlertDialog(
-                                    title: const Text("Logout"),
-                                    content: const Text(
-                                        "Are you sure to logout now?"),
-                                    actions: [
-                                      CupertinoDialogAction(
-                                        isDefaultAction: true,
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                        child: const Text("No"),
-                                      ),
-                                      CupertinoDialogAction(
-                                        isDefaultAction: true,
-                                        onPressed: () {
-                                          logout(context);
-                                        },
-                                        child: const Text("Yes"),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                              leading: Icon(
-                                Icons.logout_outlined,
-                                color: Colors.blue,
-                              ),
-                              title: Text(
-                                "Logout",
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                              trailing: Icon(Icons.chevron_right_outlined,
-                                  color: Colors.grey.shade700),
-                              tileColor: Colors.white,
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
+                        const SizedBox(height: 15),
+                        Text(widget.user['displayName'] ?? "",
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade800)),
+                        Text("@${widget.user['username']}",
+                            style: TextStyle(
+                                fontSize: 13, color: Colors.grey.shade500)),
+                        const SizedBox(height: 5),
+                        Text("Mobile Developer | Coding lover | Stay focus",
+                            style: TextStyle(
+                                fontSize: 14, color: Colors.grey.shade600))
+                      ],
+                    ),
                   ),
-                );
-              }),
-        ));
+                  // Build settings groups using the helper method
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Column(
+                      children: [
+                        buildSettingGroup("Account", accountSettings),
+                        buildSettingGroup("Data & Storage", dataSettings),
+                        buildSettingGroup("Other", otherSettings),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
   }
 }
